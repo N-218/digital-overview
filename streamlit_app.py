@@ -16,7 +16,6 @@ st.set_page_config(
 # =========================
 st.markdown("""
 <style>
-    /* ---- Base Layout ---- */
     .stApp {
         background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
         font-family: 'Inter', 'Segoe UI', sans-serif;
@@ -29,7 +28,6 @@ st.markdown("""
         max-width: 95% !important;
     }
 
-    /* ---- Boeing Watermark ---- */
     .stApp::before {
         content: "";
         background-image: url("https://upload.wikimedia.org/wikipedia/commons/3/36/Boeing_full_logo.svg");
@@ -42,7 +40,6 @@ st.markdown("""
         z-index: 0;
     }
 
-    /* ---- Dashboard Header ---- */
     .dashboard-header {
         background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
         border-radius: 20px;
@@ -64,7 +61,6 @@ st.markdown("""
         margin: 0;
     }
 
-    /* ---- Card Style ---- */
     .card {
         background-color: white;
         border-radius: 16px;
@@ -73,7 +69,6 @@ st.markdown("""
         margin-bottom: 20px;
     }
 
-    /* ---- Footer ---- */
     footer {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
@@ -90,7 +85,7 @@ else:
     st.warning("Please upload your CSV file to continue.")
     st.stop()
 
-# Map risk levels to numeric
+# Risk Mapping
 risk_mapping = {"Low": 1, "Medium": 2, "High": 3}
 df["Risk_Score"] = df["Risk_Level"].map(risk_mapping)
 
@@ -134,41 +129,55 @@ with st.container():
 st.markdown("---")
 
 # =========================
-# FORECAST + RISK CHARTS
+# FORECAST + RISK CHARTS (FIXED DISPLAY)
 # =========================
 st.markdown("### 📊 Forecast & Risk Overview")
-col1, col2 = st.columns(2)
+chart_container = st.container()
+with chart_container:
+    col1, col2 = st.columns(2)
 
-with col1:
-    fig1 = px.line(
-        df_filtered,
-        x="Year",
-        y=["ProductionGap", "Predicted_Gap"],
-        markers=True,
-        labels={"value": "Gap", "variable": "Type"},
-        title="Production Gap Forecast (2021–2028)",
-        color_discrete_sequence=["#2563eb", "#1e3a8a"]
-    )
-    fig1.update_layout(title_x=0.5, template="plotly_white", height=350)
-    st.plotly_chart(fig1, use_container_width=True)
+    with col1:
+        fig1 = px.line(
+            df_filtered,
+            x="Year",
+            y=["ProductionGap", "Predicted_Gap"],
+            markers=True,
+            labels={"value": "Gap", "variable": "Type"},
+            title="Production Gap Forecast (2021–2028)",
+            color_discrete_sequence=["#2563eb", "#1e3a8a"]
+        )
+        fig1.update_layout(
+            title_x=0.5,
+            template="plotly_white",
+            height=420,
+            margin=dict(l=40, r=40, t=50, b=40),
+            autosize=True
+        )
+        st.plotly_chart(fig1, use_container_width=True, config={"displayModeBar": False})
 
-with col2:
-    fig2 = px.bar(
-        df_filtered,
-        x="Year",
-        y="Risk_Score",
-        color="Risk_Level",
-        text="Risk_Score",
-        title="Risk Levels by Year",
-        color_discrete_map={"Low": "#22c55e", "Medium": "#facc15", "High": "#ef4444"}
-    )
-    fig2.update_layout(title_x=0.5, template="plotly_white", height=350)
-    st.plotly_chart(fig2, use_container_width=True)
+    with col2:
+        fig2 = px.bar(
+            df_filtered,
+            x="Year",
+            y="Risk_Score",
+            color="Risk_Level",
+            text="Risk_Score",
+            title="Risk Levels by Year",
+            color_discrete_map={"Low": "#22c55e", "Medium": "#facc15", "High": "#ef4444"}
+        )
+        fig2.update_layout(
+            title_x=0.5,
+            template="plotly_white",
+            height=420,
+            margin=dict(l=40, r=40, t=50, b=40),
+            autosize=True
+        )
+        st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
 
 st.markdown("---")
 
 # =========================
-# ROADMAP SECTION
+# ROADMAP (FULLY VISIBLE)
 # =========================
 st.markdown("### 🗺️ Implementation Roadmap (2025)")
 phases = pd.DataFrame([
@@ -202,10 +211,13 @@ fig3 = px.timeline(
 )
 fig3.update_yaxes(autorange="reversed")
 fig3.update_layout(
-    height=320, title_x=0.5, template="plotly_white",
-    margin=dict(l=10, r=10, t=40, b=10)
+    height=380,
+    title_x=0.5,
+    template="plotly_white",
+    margin=dict(l=80, r=40, t=60, b=60),
+    autosize=True
 )
-st.plotly_chart(fig3, use_container_width=True)
+st.plotly_chart(fig3, use_container_width=True, config={"displayModeBar": False})
 
 # =========================
 # RECOMMENDATIONS
