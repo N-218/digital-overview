@@ -22,7 +22,7 @@ else:
 risk_mapping = {"Low": 1, "Medium": 2, "High": 3}
 df["Risk_Score"] = df["Risk_Level"].map(risk_mapping)
 
-# Filters
+# Sidebar Filters
 st.sidebar.header("Filters")
 year_range = st.sidebar.slider(
     "Select Year Range", int(df["Year"].min()), int(df["Year"].max()),
@@ -32,6 +32,7 @@ risk_levels = st.sidebar.multiselect(
     "Select Risk Level(s)", options=df["Risk_Level"].unique(), default=df["Risk_Level"].unique()
 )
 
+# Apply filters
 df_filtered = df[(df["Year"] >= year_range[0]) & (df["Year"] <= year_range[1])]
 df_filtered = df_filtered[df_filtered["Risk_Level"].isin(risk_levels)]
 
@@ -105,7 +106,8 @@ with st.expander("Click to view actionable insights"):
     else:
         st.markdown("- ✅ Predicted gaps are within manageable range.")
 
-    st.markdown("""
-    - Integrate digital telemetry for predictive monitoring.  
-    - Add automated alerts for suppliers exceeding risk thresholds.  
-    - Focus on years with high Risk S
+    st.markdown(
+        "- Integrate digital telemetry for predictive monitoring.\n"
+        "- Add automated alerts for suppliers exceeding risk thresholds.\n"
+        "- Focus on years with high Risk Score for proactive intervention."
+    )
