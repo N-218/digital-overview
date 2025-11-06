@@ -8,7 +8,7 @@ import plotly.express as px
 st.set_page_config(page_title="Digital Oversight Dashboard", layout="wide")
 
 # =========================
-# Background and Logo CSS
+# Background and Boeing Logo
 # =========================
 st.markdown(
     """
@@ -78,10 +78,10 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # =========================
-# KPI Highlights
+# KPI Highlights (Top Row)
 # =========================
 st.markdown("### 🚩 Key Metrics")
-col1, col2, col3, col4 = st.columns(4)
+col1, col2, col3, col4 = st.columns([1,1,1,1])
 
 col1.metric("Total Predicted Gap", f"{df_filtered['Predicted_Gap'].sum():.1f}")
 col2.metric("Max Risk Score", f"{df_filtered['Risk_Score'].max()}")
@@ -91,10 +91,10 @@ col4.metric("Total Orders", f"{df_filtered['Orders'].sum()}")
 st.markdown("---")
 
 # =========================
-# Charts Section
+# Charts Section (Middle Row)
 # =========================
 st.markdown("### 📊 Forecast & Risk Charts")
-col1, col2 = st.columns(2)
+col1, col2 = st.columns([1,1])  # Side-by-side charts for compactness
 
 with col1:
     st.subheader("Forecast Gap Over Time")
@@ -107,7 +107,7 @@ with col1:
         hover_data=["PlannedOutput", "ActualOutput", "Backlog"],
         title="Forecasted Gap by Year"
     )
-    fig1.update_layout(title_x=0.5, template="plotly_white")
+    fig1.update_layout(title_x=0.5, template="plotly_white", margin=dict(l=10,r=10,t=30,b=10))
     st.plotly_chart(fig1, use_container_width=True)
 
 with col2:
@@ -120,13 +120,13 @@ with col2:
         text="Risk_Score",
         title="Risk Scores by Year"
     )
-    fig2.update_layout(title_x=0.5, template="plotly_white")
+    fig2.update_layout(title_x=0.5, template="plotly_white", margin=dict(l=10,r=10,t=30,b=10))
     st.plotly_chart(fig2, use_container_width=True)
 
 st.markdown("---")
 
 # =========================
-# Recommendations Section
+# Recommendations Section (Bottom Row)
 # =========================
 st.markdown("### ✅ Recommendations")
 with st.expander("Click to view actionable insights"):
