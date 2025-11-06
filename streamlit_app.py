@@ -24,7 +24,7 @@ st.markdown("""
 
 .dashboard-header {
     background: #003087;
-    padding: 1rem 1.5rem;  /* smaller padding for slide fit */
+    padding: 1rem 1.5rem;
     border-radius: 8px;
     margin-bottom: 1rem;
 }
@@ -168,13 +168,19 @@ phases = pd.DataFrame([
 ])
 phases["Start"] = pd.to_datetime(phases["Start"])
 phases["Finish"] = pd.to_datetime(phases["Finish"])
-colors = {'Planning':'#003087','Implementation':'#0052CC','Integration':'#2563eb','Analytics':'#3b82f6','Deployment':'#60a5fa','Review':'#93c5fd'}
+colors = {'Planning':'#003087','Implementation':'#0052CC','Integration':'#2563eb',
+          'Analytics':'#3b82f6','Deployment':'#60a5fa','Review':'#93c5fd'}
 
 fig_roadmap = px.timeline(phases, x_start="Start", x_end="Finish", y="Phase", color="Category", color_discrete_map=colors)
 fig_roadmap.update_yaxes(autorange="reversed")
+
 current_date = pd.to_datetime("2025-11-01")
-fig_roadmap.add_vline(x=current_date, line_dash="dash", line_color="red", annotation_text="Current Date", annotation_position="top right")
-fig_roadmap.update_layout(height=300, margin=dict(l=20,r=20,t=30,b=20), template='plotly_white')
+fig_roadmap.add_vline(
+    x=current_date.isoformat(),
+    line_dash="dash", line_color="red",
+    annotation=dict(text="Current Date", showarrow=True, arrowhead=2, ax=0, ay=-40)
+)
+fig_roadmap.update_layout(height=300, margin=dict(l=20,r=20,t=30,b=20))
 st.plotly_chart(fig_roadmap, use_container_width=True, config={'displayModeBar': False})
 
 # =========================
@@ -182,24 +188,21 @@ st.plotly_chart(fig_roadmap, use_container_width=True, config={'displayModeBar':
 # =========================
 st.markdown("<h2 class='section-header'>💡 Strategic Recommendations</h2>", unsafe_allow_html=True)
 col1, col2 = st.columns(2)
-
 with col1:
     st.markdown("""
     <div class='alert-box critical'>
-        <h4>🚨 Critical Actions</h4>
+        🚨 Critical Actions
         <ul>
             <li>Implement real-time telemetry for high-risk suppliers</li>
-            <li>Establish automated alert system for KPI deviations</li>
-            <li>Increase oversight frequency during 2026-2027 period</li>
+            <li>Automated KPI deviation alerts</li>
+            <li>Increase oversight 2026-2027</li>
         </ul>
     </div>
-    """, unsafe_allow_html=True)
-    st.markdown("""
     <div class='alert-box success'>
-        <h4>✅ Quick Wins</h4>
+        ✅ Quick Wins
         <ul>
-            <li>Deploy dashboard for leadership visibility</li>
-            <li>Integrate supplier portals with central monitoring</li>
+            <li>Deploy dashboard for leadership</li>
+            <li>Integrate supplier portals</li>
             <li>Automate weekly risk reports</li>
         </ul>
     </div>
@@ -208,12 +211,12 @@ with col1:
 with col2:
     st.markdown("""
     <div class='alert-box'>
-        <h4>📋 Long-term Strategy</h4>
+        📋 Long-term Strategy
         <ul>
-            <li>Build predictive capacity planning models</li>
-            <li>Expand digital oversight to tier-2 suppliers</li>
-            <li>Develop supplier performance scorecards</li>
-            <li>Invest in AI-powered anomaly detection</li>
+            <li>Predictive capacity planning</li>
+            <li>Extend digital oversight to tier-2 suppliers</li>
+            <li>Supplier performance scorecards</li>
+            <li>AI anomaly detection</li>
         </ul>
     </div>
     """, unsafe_allow_html=True)
@@ -222,18 +225,14 @@ with col2:
 # DATA TABLE
 # =========================
 with st.expander("📊 View Detailed Data Table"):
-    st.dataframe(df_filtered.style.background_gradient(subset=['Risk_Score'], cmap='RdYlGn_r'), use_container_width=True, height=200)
+    st.dataframe(df_filtered, use_container_width=True, height=250)
 
 # =========================
 # FOOTER
 # =========================
 st.markdown("""
-<div style='text-align: center; padding: 1rem 0; border-top: 2px solid #e2e8f0; font-size:0.8rem'>
-    <p style='color: #64748b; margin: 0;'>
-        <strong>Boeing Digital Oversight System</strong> | Version 2.0 | © 2025 The Boeing Company
-    </p>
-    <p style='color: #94a3b8; margin-top: 0.25rem;'>
-        Powered by Advanced Analytics & Machine Learning | Last Updated: November 2025
-    </p>
+<div style='text-align:center; padding:1rem 0; border-top:2px solid #e2e8f0; font-size:0.8rem; color:#64748b;'>
+    <strong>Boeing Digital Oversight System</strong> | Version 2.0 | © 2025 The Boeing Company
+    <br>Powered by Advanced Analytics & Machine Learning
 </div>
 """, unsafe_allow_html=True)
