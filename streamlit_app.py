@@ -8,6 +8,36 @@ import plotly.express as px
 st.set_page_config(page_title="Digital Oversight Dashboard", layout="wide")
 
 # =========================
+# Background and Logo CSS
+# =========================
+st.markdown(
+    """
+    <style>
+    /* Gradient background */
+    .stApp {
+        background: linear-gradient(to bottom right, #f5f6fa, #ffffff);
+    }
+    /* Boeing logo watermark */
+    .stApp::before {
+        content: "";
+        background-image: url("https://upload.wikimedia.org/wikipedia/commons/3/36/Boeing_full_logo.svg");
+        background-size: 20%;
+        background-repeat: no-repeat;
+        background-position: top right;
+        opacity: 0.1;
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 0;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# =========================
 # Sidebar: Upload & Filters
 # =========================
 st.sidebar.title("Upload Your Data")
