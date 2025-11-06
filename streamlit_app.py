@@ -1,88 +1,146 @@
+# ======================================================
+# ✈️ Boeing Digital Oversight Dashboard (PPT Width Layout)
+# ======================================================
+
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import plotly.io as pio
 
-# ================================
-# 🎯 PAGE CONFIG
-# ================================
+# ------------------------------------------------------
+# PAGE CONFIGURATION
+# ------------------------------------------------------
 st.set_page_config(
     page_title="Boeing Digital Oversight Dashboard",
-    layout="wide",
-    page_icon="✈️",
+    layout="wide",  # wide layout for PPT ratio
+    page_icon="✈️"
 )
 
-st.title("✈️ Boeing Digital Production Oversight Pilot Dashboard")
-st.markdown("#### Transparency, Predictability, and Speed — Where We Need It Most")
-
-# ================================
-# 📊 DATA LOADING
-# ================================
-data = pd.DataFrame({
-    "Year": [2021, 2022, 2023, 2024, 2025],
-    "PlannedOutput": [264, 372, 456, 456, 456],
-    "ActualOutput": [263, 387, 396, 265, 45],
-    "ProductionGap": [1, -15, 60, 191, 411],
-    "Predicted_Gap": [-75.6, 27.0, 129.6, 232.2, 334.8]
-})
-
-# ================================
-# 📈 FORECAST CHART
-# ================================
-st.subheader("📈 Forecast: Production Gaps (Actual vs Predicted)")
-
-fig1 = px.line(
-    data,
-    x="Year",
-    y=["ProductionGap", "Predicted_Gap"],
-    markers=True,
-    labels={"value": "Gap", "variable": "Type"},
-    title="Production Gap vs Predicted Future Trends"
+# ------------------------------------------------------
+# STYLING: Background + Boeing Logo
+# ------------------------------------------------------
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background: linear-gradient(to bottom right, #f9fafc, #ffffff);
+        zoom: 0.9;  /* Slightly zoom out to fit slide width */
+    }
+    .stApp::before {
+        content: "";
+        background-image: url("https://upload.wikimedia.org/wikipedia/commons/3/36/Boeing_full_logo.svg");
+        background-size: 15%;
+        background-repeat: no-repeat;
+        background-position: top right;
+        opacity: 0.08;
+        position: fixed;
+        top: 0; right: 0; bottom: 0; left: 0;
+        z-index: 0;
+    }
+    h1, h2, h3 {
+        font-family: 'Segoe UI', sans-serif;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
 )
-fig1.update_layout(template="plotly_dark")
-st.plotly_chart(fig1, use_container_width=True)
 
-# ================================
-# ⚠️ RISK CHART
-# ================================
-st.subheader("⚠️ Risk Visualization")
+# ------------------------------------------------------
+# SIDEBAR: Upload + Filters
+# ------------------------------------------------------
+st.sidebar.title("📂 Upload Data")
+uploaded_file = st.sidebar.file_uploader("Upload Digital_Oversight_Forecast.csv", type=["csv"])
 
-risk_levels = []
-for g in data["Predicted_Gap"]:
-    if g < 100:
-        risk_levels.append("Low")
-    elif g < 250:
-        risk_levels.append("Medium")
-    else:
-        risk_levels.append("High")
+if uploaded_file is not None:
+    df = pd.read_csv(uploaded_file)
+else:
+    st.warning("Please upload your CSV file to continue.")
+    st.stop()
 
-data["Risk_Level"] = risk_levels
+risk_mapping = {"Low": 1, "Medium": 2, "High": 3}
+df["Risk_Score"] = df["Risk_Level"].map(risk_mapping)
 
-fig2 = px.bar(
-    data,
-    x="Year",
-    y="Predicted_Gap",
-    color="Risk_Level",
-    color_discrete_map={"Low": "green", "Medium": "orange", "High": "red"},
-    title="Predicted Production Gap – Risk Level by Year"
+# Filters
+st.sidebar.header("🔍 Filters")
+year_range = st.sidebar.slider(
+    "Select Year Range",
+    int(df["Year"].min()),
+    int(df["Year"].max()),
+    (int(df["Year"].min()), int(df["Year"].max()))
 )
-fig2.update_layout(template="plotly_dark")
-st.plotly_chart(fig2, use_container_width=True)
+risk_levels = st.sidebar.multiselect(
+    "Select Risk Levels",
+    df["Risk_Level"].unique(),
+    default=df["Risk_Level"].unique()
+)
 
-# ================================
-# 🚀 IMPLEMENTATION ROADMAP
-# ================================
-st.subheader("🚀 Implementation Roadmap – Digital Oversight Pilot")
+df_filtered = df[(df["Year"] >= year_range[0]) & (df["Year"] <= year_range[1])]
+df_filtered = df_filtered[df_filtered["Risk_Level"].isin(risk_levels)]
 
+# ------------------------------------------------------
+# HEADER
+# ------------------------------------------------------
+st.markdown("""
+<div style='text-align: center; margin-bottom: -15px'>
+    <h1 style='color:#0a3d62; font-size:34px;'>✈️ Boeing Digital Oversight Dashboard</h1>
+    <p style='font-size:16px; color:#34495e;'>Forecast | Risk | Roadmap</p>
+    <hr style='width:50%; border:1px solid #dcdde1;'>
+</div>
+""", unsafe_allow_html=True)
+
+# ------------------------------------------------------
+# KPI METRICS (Compact Row)
+# ------------------------------------------------------
+st.markdown("### 🚩 Key Insights")
+col1, col2, col3, col4 = st.columns(4)
+col1.metric("Predicted Gap", f"{df_filtered['Predicted_Gap'].sum():,.0f}")
+col2.metric("Max Risk", f"{df_filtered['Risk_Score'].max()}")
+col3.metric("High-Risk Year", f"{df_filtered.loc[df_filtered['Risk_Score'].idxmax(), 'Year']}")
+col4.metric("Total Orders", f"{df_filtered['Orders'].sum():,}")
+
+# ------------------------------------------------------
+# FORECAST + RISK VISUALS (Side by Side)
+# ------------------------------------------------------
+st.markdown("### 📊 Forecast and Risk Overview")
+col1, col2 = st.columns(2)
+
+with col1:
+    fig1 = px.line(
+        df_filtered,
+        x="Year",
+        y=["ProductionGap", "Predicted_Gap"],
+        markers=True,
+        labels={"value": "Gap", "variable": "Type"},
+        title="Production Gap Forecast (2021–2028)",
+        color_discrete_sequence=["#1E90FF", "#E74C3C"]
+    )
+    fig1.update_layout(height=350, title_x=0.5, template="plotly_white")
+    st.plotly_chart(fig1, use_container_width=True)
+
+with col2:
+    fig2 = px.bar(
+        df_filtered,
+        x="Year",
+        y="Risk_Score",
+        color="Risk_Level",
+        text="Risk_Score",
+        title="Risk Levels by Year",
+        color_discrete_map={"Low": "#2ECC71", "Medium": "#F39C12", "High": "#E74C3C"}
+    )
+    fig2.update_layout(height=350, title_x=0.5, template="plotly_white")
+    st.plotly_chart(fig2, use_container_width=True)
+
+# ------------------------------------------------------
+# ROADMAP (Shorter Height)
+# ------------------------------------------------------
+st.markdown("### 🗺️ Implementation Roadmap (2025)")
 phases = pd.DataFrame([
-    dict(Phase='Phase 1: Project Planning & Vendor Setup', Start='2025-01-01', Finish='2025-02-28', Category='Planning'),
-    dict(Phase='Phase 2: Shop-Floor Telemetry Installation', Start='2025-03-01', Finish='2025-04-30', Category='Implementation'),
-    dict(Phase='Phase 3: Supplier Telemetry Integration', Start='2025-05-01', Finish='2025-06-30', Category='Integration'),
-    dict(Phase='Phase 4: Pilot Operations & Predictive Analytics', Start='2025-07-01', Finish='2025-12-31', Category='Analytics'),
-    dict(Phase='Phase 5: Unified KPI Dashboards Deployment', Start='2025-07-01', Finish='2025-12-31', Category='Dashboard'),
-    dict(Phase='Phase 6: Results Review & Scale-Up Decision', Start='2025-12-31', Finish='2025-12-31', Category='Review')
+    dict(Phase='Planning & Vendor Setup', Start='2025-01-01', Finish='2025-02-28', Category='Planning'),
+    dict(Phase='Telemetry Installation', Start='2025-03-01', Finish='2025-04-30', Category='Implementation'),
+    dict(Phase='Supplier Integration', Start='2025-05-01', Finish='2025-06-30', Category='Integration'),
+    dict(Phase='Pilot & Analytics', Start='2025-07-01', Finish='2025-12-31', Category='Analytics'),
+    dict(Phase='Dashboard Deployment', Start='2025-07-01', Finish='2025-12-31', Category='Dashboard'),
+    dict(Phase='Review & Scale Decision', Start='2025-12-31', Finish='2025-12-31', Category='Review')
 ])
-
 phases["Start"] = pd.to_datetime(phases["Start"])
 phases["Finish"] = pd.to_datetime(phases["Finish"])
 
@@ -102,35 +160,25 @@ fig3 = px.timeline(
     y="Phase",
     color="Category",
     color_discrete_map=colors,
-    title="Project Implementation Roadmap (2025)"
 )
 fig3.update_yaxes(autorange="reversed")
-fig3.update_layout(template="plotly_dark", height=600)
+fig3.update_layout(height=300, title_x=0.5, template="plotly_white", margin=dict(l=10, r=10, t=40, b=10))
 st.plotly_chart(fig3, use_container_width=True)
 
-# ================================
-# 🧭 KPI SUMMARY
-# ================================
-st.subheader("📊 KPI Summary")
-col1, col2, col3 = st.columns(3)
-col1.metric("Average Gap", f"{data['ProductionGap'].mean():.1f}")
-col2.metric("Highest Risk Year", data.loc[data['Predicted_Gap'].idxmax(), 'Year'])
-col3.metric("Goal", "10–20% Reduction in Delay")
+# ------------------------------------------------------
+# RECOMMENDATIONS (Compact)
+# ------------------------------------------------------
+st.markdown("### 💡 Quick Recommendations")
+with st.expander("View Recommendations"):
+    st.markdown("""
+    - ⚠️ Prioritize supplier oversight in high-gap years.
+    - Integrate digital telemetry for predictive risk monitoring.
+    - Automate alerts for suppliers exceeding KPI thresholds.
+    - Focus on **Integration & Analytics** phases for greatest ROI.
+    """)
 
-# ================================
-# 💬 RECOMMENDATIONS
-# ================================
-st.subheader("💬 Strategic Insights")
-st.markdown("""
-**🔹 Observations:**
-- Production Gaps are increasing toward 2025.
-- Forecast indicates higher risk levels from 2024–2025.
-- Predictive analytics & telemetry can help anticipate delays earlier.
-
-**🔹 Recommendations:**
-1. Accelerate supplier telemetry integration (Phase 3).
-2. Enhance data visibility across Renton and key suppliers.
-3. Deploy predictive models in real-time dashboards by Q4 2025.
-
-> “Digital oversight creates transparency, predictability, and speed — where we need it most.”
-""")
+# ------------------------------------------------------
+# FOOTER
+# ------------------------------------------------------
+st.markdown("<hr>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:center; font-size:13px;'>© 2025 Boeing | Digital Oversight Pilot | Streamlit Dashboard</p>", unsafe_allow_html=True)
