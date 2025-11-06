@@ -84,6 +84,26 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # =========================
+# EMBEDDED DATASET
+# =========================
+data = {
+    'Year': [2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028],
+    'PlannedOutput': [264, 372, 456, 456, 456, 0, 0, 0],
+    'ActualOutput': [263, 387, 396, 265, 455, 0, 0, 0],
+    'Orders': [395, 626, 1075, 236, 488, 0, 0, 0],
+    'Backlog': [341, 365, 433, 430, 164, 0, 0, 0],
+    'ProductionGap': [41, 3, 32, 319, 411, 0, 0, 0],
+    'Backlog_Change_Pct': [0, -1, 6, -0.007, 0.119, 0, 0, 0],
+    'NetLoss': [-45, -150.07, 600.186, -476.9, -724.3, 0, 0, 0],
+    'ForwardLosses': [9.2, -54, -63, -217, -585, 0, 0, 0],
+    'ExcessCapacityCost': [-227.3, 600, 300, -70, -55, 0, 0, 0],
+    'Risk_Level': ['Low', 'Low', 'Medium', 'Medium', 'High', 'High', 'High', 'High'],
+    'Predicted_Gap': [-75.6, 27, 129.6, 232.2, 334.8, 437.4, 540, 642.6]
+}
+
+df_embedded = pd.DataFrame(data)
+
+# =========================
 # SIDEBAR
 # =========================
 with st.sidebar:
@@ -95,17 +115,16 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("### 📂 Data Upload")
-    uploaded_file = st.file_uploader("Upload Forecast CSV", type=["csv"], label_visibility="collapsed")
+    st.markdown("### 📂 Data Source")
+    uploaded_file = st.file_uploader("Upload Custom CSV (Optional)", type=["csv"], label_visibility="collapsed")
     
-    if uploaded_file is None:
-        st.info("👆 Upload your Digital_Oversight_Forecast.csv file to begin analysis")
-        st.stop()
+    if uploaded_file is not None:
+        df = pd.read_csv(uploaded_file)
+        st.success("✅ Custom data loaded")
+    else:
+        df = df_embedded.copy()
+        st.info("📊 Using embedded dataset")
 
-# =========================
-# LOAD DATA
-# =========================
-df = pd.read_csv(uploaded_file)
 risk_mapping = {"Low": 1, "Medium": 2, "High": 3}
 df["Risk_Score"] = df["Risk_Level"].map(risk_mapping)
 
@@ -124,7 +143,8 @@ with st.sidebar:
     
     st.markdown("---")
     st.markdown("#### 📊 Gap Analysis")
-    gap_threshold = st.slider("Show Gaps Greater Than", 0, int(df["Predicted_Gap"].max()), 0, step=100, key="gap_filter")
+    gap_threshold = st.slider("Show Gaps Greater Than", int(df["Predicted_Gap"].min()), int(df["Predicted_Gap"].max()), 
+                              int(df["Predicted_Gap"].min()), step=50, key="gap_filter")
     
     st.markdown("#### 📦 Order Volume")
     order_min, order_max = st.slider("Order Range", int(df["Orders"].min()), int(df["Orders"].max()),
@@ -272,7 +292,7 @@ with tab2:
     
     color_col = df_filtered['Risk_Score'] if scatter_color == "Risk Level" else df_filtered['Year']
     colorscale = [[0, '#0B8043'], [0.5, '#F57C00'], [1, '#C81E1E']] if scatter_color == "Risk Level" else [[0, '#001F5B'], [0.5, '#0039A6'], [1, '#005EB8']]
-    size_col = df_filtered['Risk_Score']*12 if scatter_size == "Risk Score" else df_filtered['Orders']/100 if scatter_size == "Orders" else df_filtered['Predicted_Gap']/50
+    size_col = df_filtered['Risk_Score']*12 if scatter_size == "Risk Score" else df_filtered['Orders']/10 if scatter_size == "Orders" else df_filtered['Predicted_Gap']/10
     
     fig_scatter = go.Figure(data=go.Scatter(x=df_filtered['Orders'], y=df_filtered['Predicted_Gap'], mode='markers',
                                            marker=dict(size=size_col, color=color_col, colorscale=colorscale, showscale=True, colorbar=dict(title=scatter_color)),
