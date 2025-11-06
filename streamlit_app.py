@@ -45,6 +45,7 @@ st.markdown("""
 .alert-box { padding: 1rem 1.5rem; border-radius: 8px; margin: 1rem 0; }
 .alert-box.critical { background: #fee2e2; border-left: 4px solid #dc2626; }
 .alert-box.success { background: #d1fae5; border-left: 4px solid #10b981; }
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -89,7 +90,7 @@ with st.sidebar:
         default=df["Risk_Level"].unique()
     )
 
-# Apply filters once
+# Apply filters
 df_filtered = df[(df["Year"] >= year_range[0]) & (df["Year"] <= year_range[1])]
 df_filtered = df_filtered[df_filtered["Risk_Level"].isin(risk_levels)]
 
@@ -138,7 +139,7 @@ if high_risk_years:
     """, unsafe_allow_html=True)
 
 # =========================
-# GRAPHS
+# PRODUCTION ANALYSIS
 # =========================
 with st.container():
     st.markdown("<h2 class='section-header'>📈 Production Analysis & Forecasting</h2>", unsafe_allow_html=True)
@@ -178,16 +179,23 @@ with st.container():
     st.plotly_chart(fig2, use_container_width=True, config={'displayModeBar': False})
 
 # =========================
-# FOOTER
+# IMPLEMENTATION ROADMAP
 # =========================
-st.markdown("<br><br>", unsafe_allow_html=True)
-st.markdown("""
-<div style='text-align: center; padding: 2rem 0 1rem 0; border-top: 2px solid #e2e8f0;'>
-    <p style='color: #64748b; font-size: 0.875rem; margin: 0;'>
-        <strong>Boeing Digital Oversight System</strong> | Version 2.0 | © 2025 The Boeing Company
-    </p>
-    <p style='color: #94a3b8; font-size: 0.75rem; margin-top: 0.5rem;'>
-        Powered by Advanced Analytics & Machine Learning | Last Updated: November 2025
-    </p>
-</div>
-""", unsafe_allow_html=True)
+with st.container():
+    st.markdown("<h2 class='section-header'>🗺️ Implementation Roadmap 2025</h2>", unsafe_allow_html=True)
+
+    phases = pd.DataFrame([
+        dict(Phase='Phase 1: Planning & Vendor Setup', Start='2025-01-01', Finish='2025-02-28', Category='Planning', Progress=100),
+        dict(Phase='Phase 2: Telemetry Installation', Start='2025-03-01', Finish='2025-04-30', Category='Implementation', Progress=75),
+        dict(Phase='Phase 3: Supplier Integration', Start='2025-05-01', Finish='2025-06-30', Category='Integration', Progress=45),
+        dict(Phase='Phase 4: Pilot & Analytics', Start='2025-07-01', Finish='2025-10-31', Category='Analytics', Progress=20),
+        dict(Phase='Phase 5: Dashboard Deployment', Start='2025-11-01', Finish='2025-12-15', Category='Deployment', Progress=0),
+        dict(Phase='Phase 6: Review & Scale Decision', Start='2025-12-16', Finish='2025-12-31', Category='Review', Progress=0)
+    ])
+    phases["Start"] = pd.to_datetime(phases["Start"])
+    phases["Finish"] = pd.to_datetime(phases["Finish"])
+    colors = {'Planning': '#003087','Implementation': '#0052CC','Integration': '#2563eb','Analytics': '#3b82f6','Deployment': '#60a5fa','Review': '#93c5fd'}
+
+    fig3 = px.timeline(phases, x_start="Start", x_end="Finish", y="Phase", color="Category", color_discrete_map=colors)
+    fig3.update_yaxes(autorange="reversed")
+    fig3.update_layout(height=400, template='plotly_white', paper_bgcolor='rgba(0,0,0,0
