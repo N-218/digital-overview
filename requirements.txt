@@ -2,7 +2,7 @@ streamlit
 pandas
 plotly
 matplotlib
-pip install streamlit-plotly-events
+
 
 
 
