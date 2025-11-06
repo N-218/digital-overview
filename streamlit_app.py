@@ -15,7 +15,7 @@ st.set_page_config(
 )
 
 # =========================
-# ENHANCED CUSTOM CSS
+# CUSTOM CSS
 # =========================
 st.markdown("""
 <style>
@@ -97,7 +97,9 @@ with st.sidebar:
     st.markdown("### 📂 Data Upload")
     uploaded_file = st.file_uploader("Upload Forecast CSV", type=["csv"], label_visibility="collapsed")
 
-# Load dataset
+# =========================
+# LOAD DATA
+# =========================
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
 else:
@@ -124,7 +126,7 @@ risk_mapping = {"Low": 1, "Medium": 2, "High": 3}
 df["Risk_Score"] = df["Risk_Level"].map(risk_mapping)
 
 # =========================
-# INTERACTIVE FILTERS
+# SIDEBAR FILTERS
 # =========================
 with st.sidebar:
     st.markdown("<br><br>", unsafe_allow_html=True)
@@ -156,7 +158,9 @@ with st.sidebar:
             st.session_state.risk_filter = df['Risk_Level'].unique().tolist()
             st.experimental_rerun()
 
-# Apply filters
+# =========================
+# APPLY FILTERS
+# =========================
 df_filtered = df[
     (df["Year"] >= year_range[0]) & (df["Year"] <= year_range[1]) &
     (df["Risk_Level"].isin(risk_levels)) &
@@ -211,6 +215,66 @@ if high_risk_years:
     st.markdown(f"""<div class='alert-box critical'><h4>⚠️ CRITICAL ALERT: High-Risk Periods Detected</h4>
     <p style='margin: 0; font-size: 1rem; line-height: 1.6;'><strong>Affected Years:</strong> {', '.join(map(str, high_risk_years))}<br>
     <strong>Action Required:</strong> Immediate supplier oversight and capacity planning review needed.</p></div>""", unsafe_allow_html=True)
+
+# =========================
+# CHARTS & TABS
+# =========================
+st.markdown("<div class='section-header'>📈 Production vs Orders</div>", unsafe_allow_html=True)
+
+fig = make_subplots(specs=[[{"secondary_y": True}]])
+fig.add_trace(go.Bar(x=df_filtered["Year"], y=df_filtered["Orders"], name="Orders", marker_color="#0033A0"))
+fig.add_trace(go.Line(x=df_filtered["Year"], y=df_filtered["ActualOutput"], name="Actual Output", marker_color="#10B981"), secondary_y=False)
+fig.add_trace(go.Line(x=df_filtered["Year"], y=df_filtered["PlannedOutput"], name="Planned Output", marker_color="#F59E0B"), secondary_y=False)
+fig.add_trace(go.Line(x=df_filtered["Year"], y=df_filtered["Predicted_Gap"], name="Predicted Gap", marker_color="#DC2626", line=dict(dash="dot")), secondary_y=True)
+
+fig.update_layout(barmode='group', legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
+fig.update_yaxes(title_text="Units Produced / Ordered", secondary_y=False)
+fig.update_yaxes(title_text="Predicted Gap", secondary_y=True)
+
+st.plotly_chart(fig, use_container_width=True)
+
+# =========================
+# RISK DASHBOARD
+# =========================
+st.markdown("<div class='section-header'>⚡ Risk Overview</div>", unsafe_allow_html=True)
+
+risk_summary = df_filtered.groupby("Risk_Level").size().reset_index(name="Count")
+for _, row in risk_summary.iterrows():
+    width = min(100, row["Count"]*10)
+    st.markdown(f"""
+    <div class='risk-item'>
+        <div class='risk-header'>
+            <div class='risk-label'>{row['Risk_Level']}</div>
+            <div class='risk-count'>{row['Count']}</div>
+        </div>
+        <div class='risk-bar-bg'><div class='risk-bar-fill' style='width:{width}%;background-color:#0033A0'></div></div>
+    </div>
+    """, unsafe_allow_html=True)
+
+# =========================
+# ROADMAP & RECOMMENDATIONS
+# =========================
+st.markdown("<div class='section-header'>🛣️ Roadmap & Recommendations</div>", unsafe_allow_html=True)
+
+st.markdown("""
+<div class='phase-card'>
+    <div class='phase-progress'>1️⃣</div>
+    <div class='phase-label'>Short-term: Stabilize Production</div>
+    <p>Optimize capacity planning, reallocate resources, and reduce predicted gaps.</p>
+</div>
+<br>
+<div class='phase-card'>
+    <div class='phase-progress'>2️⃣</div>
+    <div class='phase-label'>Mid-term: Mitigate High-Risk Years</div>
+    <p>Engage suppliers, enhance monitoring, and implement early-warning systems.</p>
+</div>
+<br>
+<div class='phase-card'>
+    <div class='phase-progress'>3️⃣</div>
+    <div class='phase-label'>Long-term: Strategic Forecasting</div>
+    <p>Invest in predictive analytics, automate backlog management, and reduce production volatility.</p>
+</div>
+""", unsafe_allow_html=True)
 
 # =========================
 # FOOTER
