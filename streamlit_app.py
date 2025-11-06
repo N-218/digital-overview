@@ -2,41 +2,31 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 # =========================
 # PAGE CONFIG
 # =========================
-st.set_page_config(
-    page_title="Boeing Digital Oversight Dashboard",
-    layout="wide",
-    page_icon="✈️",
-    initial_sidebar_state="expanded"
-)
+st.set_page_config(page_title="Boeing Digital Oversight Dashboard",
+                   layout="wide", page_icon="✈️")
 
 # =========================
-# CUSTOM CSS
+# STYLES
 # =========================
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
-.stApp { background: #f8fafc; font-family: 'Inter', 'Segoe UI', sans-serif; }
-
-.dashboard-header {
-    background: #003087;
-    padding: 1rem 1.5rem;
-    border-radius: 8px;
-    margin-bottom: 1rem;
-}
-.dashboard-title { color: white !important; font-size: 2.2rem; font-weight: 700; margin: 0; }
-.dashboard-subtitle { color: white !important; font-size: 1rem; margin-top: 0.25rem; }
-
-.section-header { color: #003087; font-size: 1.3rem; font-weight: 600; margin: 1rem 0 0.5rem 0; padding-bottom: 0.25rem; border-bottom: 2px solid #e2e8f0; }
-
-.alert-box { padding: 0.75rem 1rem; border-radius: 8px; margin: 0.75rem 0; font-size: 0.9rem; }
-.alert-box.critical { background: #fee2e2; border-left: 4px solid #dc2626; }
-.alert-box.success { background: #d1fae5; border-left: 4px solid #10b981; }
-
+.stApp { background: #f8fafc; font-family: 'Inter', sans-serif; }
+.dashboard-header { background:#003087; padding:1.5rem 1rem; border-radius:12px; margin-bottom:1.5rem; color:white; }
+.dashboard-title { color:white; font-size:2rem; font-weight:700; margin:0; }
+.dashboard-subtitle { color:white; font-size:1rem; margin-top:0.25rem; }
+.metric-card { background:white; padding:1rem; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.08); }
+.metric-value { color:#003087; font-size:1.75rem; font-weight:700; }
+.metric-label { color:#64748b; font-size:0.875rem; font-weight:500; }
+.section-header { color:#003087; font-size:1.5rem; font-weight:600; margin:1.5rem 0 0.5rem 0; border-bottom:2px solid #e2e8f0; }
+.alert-box { padding:1rem; border-radius:8px; margin:0.5rem 0; }
+.alert-box.critical { background:#fee2e2; border-left:4px solid #dc2626; }
+.alert-box.success { background:#d1fae5; border-left:4px solid #10b981; }
+.alert-box.info { background:#fef3c7; border-left:4px solid #f59e0b; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -44,39 +34,25 @@ st.markdown("""
 # SIDEBAR
 # =========================
 with st.sidebar:
-    st.markdown("""
-    <div style='text-align: center; padding: 1rem 0 1rem 0;'>
-        <h2 style='color: white; margin: 0; font-size: 1.6rem; letter-spacing: 3px;'>BOEING</h2>
-        <p style='color: #94a3b8; font-size: 0.75rem; margin-top: 0.25rem;'>Digital Oversight System</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("### 📂 Data Upload")
-    uploaded_file = st.file_uploader("Upload Forecast CSV", type=["csv"], label_visibility="collapsed")
+    st.markdown("<h2 style='color:white'>BOEING</h2>", unsafe_allow_html=True)
+    uploaded_file = st.file_uploader("Upload Forecast CSV", type=["csv"])
     if uploaded_file is None:
         st.info("👆 Upload your Digital_Oversight_Forecast.csv file to begin")
         st.stop()
 
-# =========================
-# LOAD DATA
-# =========================
+# Load Data
 df = pd.read_csv(uploaded_file)
-risk_mapping = {"Low": 1, "Medium": 2, "High": 3}
+risk_mapping = {"Low":1, "Medium":2, "High":3}
 df["Risk_Score"] = df["Risk_Level"].map(risk_mapping)
 
 # Sidebar Filters
 with st.sidebar:
     st.markdown("### 🔍 Filters")
-    year_range = st.slider(
-        "Year Range",
-        int(df["Year"].min()),
-        int(df["Year"].max()),
-        (int(df["Year"].min()), int(df["Year"].max()))
-    )
+    year_range = st.slider("Year Range", int(df["Year"].min()), int(df["Year"].max()), (int(df["Year"].min()), int(df["Year"].max())))
     risk_levels = st.multiselect("Risk Levels", df["Risk_Level"].unique(), default=df["Risk_Level"].unique())
 
-# Apply filters
-df_filtered = df[(df["Year"] >= year_range[0]) & (df["Year"] <= year_range[1])]
+# Filter Data
+df_filtered = df[(df["Year"]>=year_range[0]) & (df["Year"]<=year_range[1])]
 df_filtered = df_filtered[df_filtered["Risk_Level"].isin(risk_levels)]
 
 # =========================
@@ -84,75 +60,57 @@ df_filtered = df_filtered[df_filtered["Risk_Level"].isin(risk_levels)]
 # =========================
 st.markdown(f"""
 <div class='dashboard-header'>
-    <div style='display: flex; justify-content: space-between; align-items: center;'>
+    <div style='display:flex; justify-content:space-between; align-items:center;'>
         <div>
             <h1 class='dashboard-title'>Digital Oversight Dashboard</h1>
             <p class='dashboard-subtitle'>Supply Chain Intelligence & Risk Management System</p>
         </div>
-        <div style='color:white; font-weight:700;'>✈️</div>
+        <div>✈️</div>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
 # =========================
-# STRATEGIC KPIs
+# KPI METRICS
 # =========================
-col1, col2, col3, col4 = st.columns(4)
-peak_risk = df_filtered['Risk_Score'].max()
-total_gap = df_filtered['Predicted_Gap'].sum()
-total_orders = df_filtered['Orders'].sum()
-critical_year_row = df_filtered.loc[df_filtered['Risk_Score'].idxmax()]
+col1,col2,col3,col4 = st.columns(4)
+with col1:
+    total_gap = df_filtered['Predicted_Gap'].sum()
+    st.metric("Peak Oversight Risk Index", f"{total_gap:,.0f}", delta=f"{((total_gap/df_filtered['Orders'].sum())*100):.1f}% of orders")
+with col2:
+    high_risk_count = len(df_filtered[df_filtered['Risk_Level']=='High'])
+    st.metric("High-Risk Periods", high_risk_count, delta=f"{(high_risk_count/len(df_filtered)*100):.0f}% of timeline")
+with col3:
+    critical_year = df_filtered.loc[df_filtered['Risk_Score'].idxmax(),'Year']
+    critical_gap = df_filtered.loc[df_filtered['Risk_Score'].idxmax(),'Predicted_Gap']
+    st.metric("Critical Year", critical_year, delta=f"Gap: {critical_gap:,.0f}")
+with col4:
+    total_orders = df_filtered['Orders'].sum()
+    avg_orders = df_filtered['Orders'].mean()
+    st.metric("Total Orders", f"{total_orders:,.0f}", delta=f"Avg: {avg_orders:,.0f}/yr")
 
-col1.metric("Total Forward Gap (Units)", f"{total_gap:,.0f}", delta=f"{total_gap/total_orders*100:.1f}% of orders")
-col2.metric("Peak Oversight Risk Index", peak_risk)
-col3.metric("Critical Year Gap", f"{critical_year_row['Predicted_Gap']:,}")
-col4.metric("Total Orders Backlog", f"{total_orders:,}")
-
-# =========================
-# ALERT
-# =========================
+# Risk Alert
 high_risk_years = df_filtered[df_filtered['Risk_Level']=='High']['Year'].tolist()
 if high_risk_years:
-    st.markdown(f"""
-    <div class='alert-box critical'>
-        ⚠️ High-risk periods detected: {', '.join(map(str, high_risk_years))}
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(f"<div class='alert-box critical'>⚠️ High-risk years: {', '.join(map(str,high_risk_years))}</div>", unsafe_allow_html=True)
 
 # =========================
-# COMBINED GAP ANALYSIS
+# TOTAL GAP CHART
 # =========================
-st.markdown("<h2 class='section-header'>📈 Total Gap Analysis (Actual → Forecast)</h2>", unsafe_allow_html=True)
+st.markdown("<h2 class='section-header'>📈 Total Gap Analysis</h2>", unsafe_allow_html=True)
+df_sorted = df_filtered.sort_values('Year')
 fig_gap = go.Figure()
-actual_df = df_filtered[df_filtered['Year'] <= 2025]
-forecast_df = df_filtered[df_filtered['Year'] > 2025]
-
-fig_gap.add_trace(go.Scatter(
-    x=actual_df['Year'], y=actual_df['ProductionGap'],
-    mode='lines+markers', name='Actual Gap', line=dict(color='#94a3b8', width=3)
-))
-fig_gap.add_trace(go.Scatter(
-    x=forecast_df['Year'], y=forecast_df['Predicted_Gap'],
-    mode='lines+markers', name='Forecast Gap', line=dict(color='#003087', width=3, dash='dash')
-))
-
-fig_gap.update_layout(
-    xaxis_title="Year", yaxis_title="Gap (Units)",
-    template='plotly_white', height=300, margin=dict(l=20,r=20,t=30,b=20)
-)
-st.plotly_chart(fig_gap, use_container_width=True, config={'displayModeBar': False})
+fig_gap.add_trace(go.Scatter(x=df_sorted['Year'], y=df_sorted['ProductionGap'], mode='lines+markers', name='Actual', line=dict(color='#94a3b8')))
+fig_gap.add_trace(go.Scatter(x=df_sorted['Year'], y=df_sorted['Predicted_Gap'], mode='lines+markers', name='Forecast', line=dict(color='#003087', dash='dot')))
+fig_gap.update_layout(height=400, template='plotly_white', title="Production Gap: Actual vs Forecast")
+st.plotly_chart(fig_gap, use_container_width=True)
 
 # =========================
 # CORRELATION CHART
 # =========================
 st.markdown("<h2 class='section-header'>📊 Backlog vs Forward Gap</h2>", unsafe_allow_html=True)
-fig_corr = px.scatter(
-    df_filtered, x='Orders', y='Predicted_Gap', color='Risk_Level',
-    size='Risk_Score', color_discrete_map={'Low':'#10b981','Medium':'#f59e0b','High':'#dc2626'},
-    labels={'Orders':'Total Unfilled Backlog','Predicted_Gap':'Total Forward Gap'}, hover_data=['Year']
-)
-fig_corr.update_layout(height=300, margin=dict(l=20,r=20,t=30,b=20))
-st.plotly_chart(fig_corr, use_container_width=True, config={'displayModeBar': False})
+fig_corr = px.scatter(df_filtered, x='Orders', y='Predicted_Gap', color='Risk_Level', size='Risk_Score', hover_data=['Year'])
+st.plotly_chart(fig_corr, use_container_width=True)
 
 # =========================
 # ROADMAP
@@ -168,38 +126,33 @@ phases = pd.DataFrame([
 ])
 phases["Start"] = pd.to_datetime(phases["Start"])
 phases["Finish"] = pd.to_datetime(phases["Finish"])
-colors = {'Planning':'#003087','Implementation':'#0052CC','Integration':'#2563eb',
-          'Analytics':'#3b82f6','Deployment':'#60a5fa','Review':'#93c5fd'}
+colors = {'Planning':'#003087','Implementation':'#0052CC','Integration':'#2563eb','Analytics':'#3b82f6','Deployment':'#60a5fa','Review':'#93c5fd'}
 
 fig_roadmap = px.timeline(phases, x_start="Start", x_end="Finish", y="Phase", color="Category", color_discrete_map=colors)
 fig_roadmap.update_yaxes(autorange="reversed")
 
 current_date = pd.to_datetime("2025-11-01")
-fig_roadmap.add_vline(
-    x=current_date.isoformat(),
-    line_dash="dash", line_color="red",
-    annotation=dict(text="Current Date", showarrow=True, arrowhead=2, ax=0, ay=-40)
-)
+fig_roadmap.add_vline(x=current_date, line_dash="dash", line_color="red")
+fig_roadmap.add_annotation(x=current_date, y=-0.5, text="Current Date", showarrow=True, arrowhead=2, ax=0, ay=-40)
+
 fig_roadmap.update_layout(height=300, margin=dict(l=20,r=20,t=30,b=20))
-st.plotly_chart(fig_roadmap, use_container_width=True, config={'displayModeBar': False})
+st.plotly_chart(fig_roadmap, use_container_width=True)
 
 # =========================
 # STRATEGIC RECOMMENDATIONS
 # =========================
 st.markdown("<h2 class='section-header'>💡 Strategic Recommendations</h2>", unsafe_allow_html=True)
-col1, col2 = st.columns(2)
+col1,col2 = st.columns(2)
 with col1:
     st.markdown("""
-    <div class='alert-box critical'>
-        🚨 Critical Actions
+    <div class='alert-box critical'>🚨 Critical Actions
         <ul>
-            <li>Implement real-time telemetry for high-risk suppliers</li>
+            <li>Real-time telemetry for high-risk suppliers</li>
             <li>Automated KPI deviation alerts</li>
             <li>Increase oversight 2026-2027</li>
         </ul>
     </div>
-    <div class='alert-box success'>
-        ✅ Quick Wins
+    <div class='alert-box success'>✅ Quick Wins
         <ul>
             <li>Deploy dashboard for leadership</li>
             <li>Integrate supplier portals</li>
@@ -210,11 +163,10 @@ with col1:
 
 with col2:
     st.markdown("""
-    <div class='alert-box'>
-        📋 Long-term Strategy
+    <div class='alert-box'>📋 Long-term Strategy
         <ul>
             <li>Predictive capacity planning</li>
-            <li>Extend digital oversight to tier-2 suppliers</li>
+            <li>Extend oversight to tier-2 suppliers</li>
             <li>Supplier performance scorecards</li>
             <li>AI anomaly detection</li>
         </ul>
