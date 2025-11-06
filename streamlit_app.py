@@ -33,26 +33,20 @@ df_filtered = df[(df["Year"] >= year_range[0]) & (df["Year"] <= year_range[1])]
 df_filtered = df_filtered[df_filtered["Risk_Level"].isin(risk_levels)]
 
 # =========================
-# Section 1: Data Overview
+# Section 1: KPI Highlights
 # =========================
-st.header("🗂️ Data Overview")
-# KPI cards
+st.title("🔮 Digital Oversight Dashboard")
+st.header("🚩 Key Metrics")
 col1, col2, col3, col4 = st.columns(4)
 col1.metric("Total Predicted Gap", f"{df_filtered['Predicted_Gap'].sum():.1f}")
 col2.metric("Max Risk Score", f"{df_filtered['Risk_Score'].max()}")
 col3.metric("Year with Highest Risk", f"{df_filtered.loc[df_filtered['Risk_Score'].idxmax(), 'Year']}")
 col4.metric("Total Orders", f"{df_filtered['Orders'].sum()}")
 
-# Optional: summary statistics table
-st.subheader("Summary Statistics")
-summary_df = df_filtered[["PlannedOutput", "ActualOutput", "Orders", "Backlog", "Predicted_Gap"]].describe()
-st.dataframe(summary_df.style.background_gradient(cmap="Blues"))
-
 # =========================
 # Section 2 & 3: Charts
 # =========================
 st.header("📊 Forecast & Risk Charts")
-
 col1, col2 = st.columns(2)
 
 with col1:
@@ -86,8 +80,6 @@ with col2:
 # Section 4: Recommendations
 # =========================
 st.header("✅ Recommendations")
-
-# Highlight high gaps dynamically
 high_gap_years = df_filtered[df_filtered["Predicted_Gap"] > 300]["Year"].tolist()
 if high_gap_years:
     st.markdown(f"- ⚠️ High predicted gaps detected in {', '.join(map(str, high_gap_years))} — prioritize supplier oversight.")
