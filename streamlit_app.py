@@ -1,307 +1,1277 @@
-import streamlit as st
-import pandas as pd
-import plotly.express as px
+import streamlit as st 
 
-# =========================
-# 1. PAGE CONFIGURATION & SETUP
-# =========================
-st.set_page_config(
-    page_title="Boeing Digital Oversight Dashboard",
-    layout="wide",
-    page_icon="✈️"
-)
+import pandas as pd 
 
-# Define Corporate Color Palette
-NAVY_BLUE = "#00315a"  # Boeing primary color (Dark Navy)
-LIGHT_BLUE = "#4a90e2" # Accent/Highlight Blue
-MEDIUM_BLUE = "#2196F3" # Chart line color
-RED_RISK = "#E74C3C"   # High Risk
-YELLOW_RISK = "#F39C12" # Medium Risk
-GREEN_RISK = "#2ECC71"  # Low Risk
+import plotly.express as px 
 
-# =========================
-# 2. CUSTOM STYLE (Professional Card Theme)
-# =========================
-st.markdown(f"""
-<style>
-/* Main App Styling */
-.stApp {{
-    background-color: #f0f2f6; /* Very subtle light grey background */
-    font-family: 'Inter', sans-serif;
-}}
-h1, h2, h3, .st-b5 {{
-    color: {NAVY_BLUE};
-    font-weight: 700;
-}}
-/* Separator */
-hr {{
-    border: 0;
-    height: 1px;
-    background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 49, 90, 0.3), rgba(0, 0, 0, 0));
-    margin: 1.5rem 0;
-}}
-/* Metric Styling for Cards */
-[data-testid="stMetric"] {{
-    background-color: #FFFFFF;
-    border-radius: 12px;
-    padding: 20px 20px 10px 20px;
-    box-shadow: 0 4px 12px rgba(0, 49, 90, 0.08); /* Subtle Navy shadow */
-    border-left: 5px solid {LIGHT_BLUE}; /* Blue accent border */
-}}
-/* Metric Value (Large Number) */
-[data-testid="stMetricValue"] {{
-    font-size: 2.2rem !important;
-    color: {NAVY_BLUE} !important;
-}}
-/* Sidebar Styling */
-.sidebar .sidebar-content {{
-    background-color: #FFFFFF;
-    border-right: 1px solid #e0e0e0;
-}}
-/* Expander Card Style */
-[data-testid="stExpander"] div[role="button"] {{
-    background-color: #FFFFFF;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 49, 90, 0.05);
-}}
-</style>
-""", unsafe_allow_html=True)
+import plotly.graph_objects as go 
 
+from plotly.subplots import make_subplots 
 
-# =========================
-# 3. MOCK DATA & DATA LOADING
-# =========================
+ 
 
-# Updated Mock Data based on the user's provided CSV structure
-MOCK_DATA = {
-    'Year': [2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028],
-    'PlannedOutput': [264, 372, 456, 456, 456, 0, 0, 0],
-    'ActualOutput': [263, 387, 396, 265, 455, 0, 0, 0],
-    'Orders': [395, 626, 1075, 2364, 5848, 0, 0, 0],
-    'Backlog': [341, 365, 433, 303, 164, 0, 0, 0],
-    'ProductionGap': [410, 30, 260, 191, 110, 0, 0, 0],
-    'Backlog_Change_Pct': [-459.2, -150.07, 0.186, -0.007, 0.119, 0, 0, 0],
-    'NetLoss': [-227.3, -546.0, -633.0, -476.9, -724.3, 0, 0, 0],
-    'ForwardLosses': [-206.7, 0, 0, -217.0, -585.0, 0, 0, 0],
-    # Imputing 0 for missing ExcessCapacityCost values in early years to ensure data structure integrity
-    'ExcessCapacityCost': [0, 0, 0, -70, -55, 0, 0, 0], 
-    'Risk_Level': ['Low', 'Low', 'Medium', 'Medium', 'High', 'High', 'High', 'High'],
-    'Predicted_Gap': [-75.6, 27.0, 129.6, 232.2, 334.8, 437.4, 540.0, 642.6]
-}
+# ========================= 
 
-def load_data(uploaded_file):
-    """Loads uploaded data or uses mock data."""
-    if uploaded_file is not None:
-        try:
-            df = pd.read_csv(uploaded_file)
-            # Ensure critical columns are present even if the user uploads a file
-            required_cols = ['Year', 'ProductionGap', 'Risk_Level', 'Predicted_Gap', 'Orders']
-            if not all(col in df.columns for col in required_cols):
-                 st.error(f"Uploaded CSV is missing one or more required columns: {', '.join(required_cols)}")
-                 st.stop()
-        except Exception as e:
-            st.error(f"Error reading uploaded file: {e}")
-            df = pd.DataFrame(MOCK_DATA)
-            st.info("Reverted to **Mock Data** due to file error.")
-    else:
-        # Use mock data if no file is uploaded
-        df = pd.DataFrame(MOCK_DATA)
-        st.info("Using **Mock Data** for demonstration. Please upload your CSV file in the sidebar to use real data.")
+# PAGE CONFIGURATION 
 
-    # Convert Risk Level to Numeric Score
-    risk_mapping = {"Low": 1, "Medium": 2, "High": 3}
-    df["Risk_Score"] = df["Risk_Level"].map(risk_mapping)
+# ========================= 
 
-    return df
+st.set_page_config( 
 
-# =========================
-# 4. SIDEBAR (Upload & Filters)
-# =========================
-st.sidebar.title("✈️ Boeing Oversight")
-uploaded_file = st.sidebar.file_uploader("Upload Digital_Oversight_Forecast.csv", type=["csv"])
+    page_title="Boeing Digital Oversight Dashboard", 
 
-df = load_data(uploaded_file)
+    layout="wide", 
 
-# Sidebar Filters
-st.sidebar.header("🔍 Filter Scope")
-# Ensure min/max operations work even if the data range is small
-min_year = int(df["Year"].min()) if not df.empty else 2021
-max_year = int(df["Year"].max()) if not df.empty else 2028
-default_range = (min_year, max_year)
-if min_year == max_year:
-    default_range = (min_year, max_year) # Handle single year case
-else:
-    default_range = (min_year, max_year)
+    page_icon="✈️", 
 
-year_range = st.sidebar.slider(
-    "Select Year Range",
-    min_year,
-    max_year,
-    default_range
-)
-risk_levels = st.sidebar.multiselect(
-    "Select Risk Levels",
-    df["Risk_Level"].unique(),
-    default=df["Risk_Level"].unique()
-)
+    initial_sidebar_state="expanded" 
 
-# Apply Filters
-df_filtered = df[(df["Year"] >= year_range[0]) & (df["Year"] <= year_range[1])]
-df_filtered = df_filtered[df_filtered["Risk_Level"].isin(risk_levels)]
+) 
 
-if df_filtered.empty:
-    st.error("No data matches the selected filters. Please adjust the range or risk levels.")
-    st.stop()
+ 
 
+# ========================= 
 
-# =========================
-# 5. HEADER & KPI METRICS (Card Layout)
-# =========================
-st.markdown(f"""
-<div style='text-align:left; padding: 10px 0;'>
-    <h1 style='color:{NAVY_BLUE}; margin-bottom: 0px;'>Digital Oversight Dashboard</h1>
-    <p style='color:#6c757d; font-size:18px;'>Strategic Forecast, Risk Assessment, and Implementation Roadmap</p>
-</div>
-<hr>
-""", unsafe_allow_html=True)
+# BOEING BRAND COLORS & CUSTOM STYLE 
 
-st.markdown("### 📈 Key Performance Indicators (KPIs)")
-col1, col2, col3, col4 = st.columns(4)
+# ========================= 
 
-# Calculate KPI values (handle potential NaN/empty sums)
-total_predicted_gap = df_filtered['Predicted_Gap'].sum()
-max_risk_score = df_filtered['Risk_Score'].max()
-max_risk_year = df_filtered.loc[df_filtered['Risk_Score'].idxmax(), 'Year'] if not df_filtered.empty and df_filtered['Risk_Score'].max() == 3 else 'N/A'
-total_orders = df_filtered['Orders'].sum()
+st.markdown(""" 
 
-col1.metric("Total Predicted Gap (Units)", f"{total_predicted_gap:,.0f}")
-col2.metric("Max Oversight Risk Score", f"{max_risk_score}")
-col3.metric("Year of Peak Risk", f"{max_risk_year}")
-col4.metric("Total Confirmed Orders", f"{total_orders:,}")
+<style> 
 
-st.markdown("---")
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'); 
 
-# =========================
-# 6. FORECAST + RISK VISUALS
-# =========================
-st.markdown("### 📊 Production Forecast and Risk Analysis")
+ 
 
-# Use a container for a clean, contained visual section
-with st.container():
-    st.markdown("""
-        <div style='background-color: #FFFFFF; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 49, 90, 0.05);'>
-        <h4 style='color: #00315a; margin-top: 0;'>Gap Forecast & Annual Risk Breakdown</h4>
-    """, unsafe_allow_html=True)
+.stApp { 
 
-    col_chart1, col_chart2 = st.columns(2)
+    background: #f8fafc; 
 
-    with col_chart1:
-        # Line Chart: Production Gap Forecast
-        fig1 = px.line(
-            df_filtered,
-            x="Year",
-            y=["ProductionGap", "Predicted_Gap"],
-            markers=True,
-            labels={"value": "Aircraft Gap (Units)", "variable": "Gap Type"},
-            title="Production Gap Forecast Trend",
-            color_discrete_sequence=[MEDIUM_BLUE, NAVY_BLUE]
-        )
-        fig1.update_layout(
-            title_x=0.5,
-            template="plotly_white",
-            height=400,
-            margin=dict(l=40, r=20, t=50, b=40),
-            legend_title_text=''
-        )
-        st.plotly_chart(fig1, use_container_width=True, config={"displayModeBar": False})
+    font-family: 'Inter', 'Segoe UI', sans-serif; 
 
-    with col_chart2:
-        # Bar Chart: Risk Levels by Year
-        fig2 = px.bar(
-            df_filtered,
-            x="Year",
-            y="Risk_Score",
-            color="Risk_Level",
-            text="Risk_Level",
-            title="Annual Supplier Oversight Risk Level",
-            color_discrete_map={"Low": GREEN_RISK, "Medium": YELLOW_RISK, "High": RED_RISK}
-        )
-        fig2.update_layout(
-            title_x=0.5,
-            template="plotly_white",
-            height=400,
-            margin=dict(l=40, r=20, t=50, b=40),
-            yaxis_title="Risk Score (1-3)",
-        )
-        fig2.update_traces(textposition='outside')
-        st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
+} 
 
-    st.markdown("</div>", unsafe_allow_html=True)
+ 
 
-st.markdown("---")
+/* Header Styling */ 
 
-# =========================
-# 7. ROADMAP (Implementation Timeline)
-# =========================
-st.markdown("### 🗺️ Digital Oversight Implementation Roadmap (2025)")
+.dashboard-header { 
 
-phases = pd.DataFrame([
-    dict(Phase='01 - Planning & Vendor Setup', Start='2025-01-01', Finish='2025-02-28', Category='Phase I: Foundation'),
-    dict(Phase='02 - Telemetry Installation', Start='2025-03-01', Finish='2025-04-30', Category='Phase II: Data Acquisition'),
-    dict(Phase='03 - Supplier Integration', Start='2025-05-01', Finish='2025-06-30', Category='Phase II: Data Acquisition'),
-    dict(Phase='04 - Pilot & Analytics Engine', Start='2025-07-01', Finish='2025-10-31', Category='Phase III: Intelligence'),
-    dict(Phase='05 - Dashboard Deployment', Start='2025-11-01', Finish='2025-12-15', Category='Phase IV: Delivery'),
-    dict(Phase('06 - Review & Scale Decision', Start='2025-12-16', Finish='2025-12-31', Category='Phase IV: Delivery')
-])
-phases["Start"] = pd.to_datetime(phases["Start"])
-phases["Finish"] = pd.to_datetime(phases["Finish"])
+    background: linear-gradient(135deg, #003087 0%, #0052CC 100%); 
 
-timeline_colors = {
-    'Phase I: Foundation': LIGHT_BLUE,
-    'Phase II: Data Acquisition': MEDIUM_BLUE,
-    'Phase III: Intelligence': YELLOW_RISK,
-    'Phase IV: Delivery': NAVY_BLUE,
-}
+    padding: 2.5rem 2rem; 
 
-fig3 = px.timeline(
-    phases,
-    x_start="Start",
-    x_end="Finish",
-    y="Phase",
-    color="Category",
-    color_discrete_map=timeline_colors,
-    title="Project Execution Timeline: 2025",
-)
-fig3.update_yaxes(autorange="reversed")
-fig3.update_layout(
-    height=450,
-    title_x=0.5,
-    title_font=dict(size=18, color=NAVY_BLUE),
-    margin=dict(l=60, r=60, t=60, b=60),
-    template="plotly_white",
-    hoverlabel=dict(bgcolor="white", font_size=14, font_family="sans-serif")
-)
-st.plotly_chart(fig3, use_container_width=True)
+    border-radius: 12px; 
 
+    margin-bottom: 2rem; 
 
-# =========================
-# 8. RECOMMENDATIONS & ACTION ITEMS
-# =========================
-st.markdown("### 💡 Strategic Summary & Action Items")
-st.markdown("""
-<div style='background-color: #FFFFFF; padding: 25px; border-radius: 12px; border-left: 5px solid #F39C12; box-shadow: 0 4px 12px rgba(0, 49, 90, 0.05);'>
-    <h5 style='color: #00315a; margin-top: 0;'>Key Takeaways from the Forecast:</h5>
-    <ul>
-        <li><b>Mitigation Focus:</b> The highest risk exposure aligns with the largest Predicted Gaps (e.g., in {max_risk_year}). Resource allocation should prioritize oversight in this window.</li>
-        <li><b>Technology Integration:</b> Accelerate <b>Phase II (Data Acquisition)</b> to establish digital telemetry and supplier integration, which is critical for moving from reactive oversight to predictive risk management.</li>
-        <li><b>Intelligence Layer:</b> Dedicate sufficient resources to <b>Phase III (Intelligence)</b> to ensure the analytics engine provides actionable insights, not just raw data.</li>
-    </ul>
-</div>
-""".format(max_risk_year=max_risk_year), unsafe_allow_html=True)
+    box-shadow: 0 4px 20px rgba(0, 48, 135, 0.15); 
 
+} 
 
-# =========================
-# 9. FOOTER
-# =========================
-st.markdown("<hr>", unsafe_allow_html=True)
-st.markdown(f"<p style='text-align:center; font-size:12px; color:#6c757d;'>&copy; 2025 The Boeing Company | Digital Oversight Pilot | All rights reserved. | App Version 1.1</p>", unsafe_allow_html=True)
+ 
+
+.dashboard-title { 
+
+    color: white; 
+
+    font-size: 2.5rem; 
+
+    font-weight: 700; 
+
+    margin: 0; 
+
+    letter-spacing: -0.5px; 
+
+} 
+
+ 
+
+.dashboard-subtitle { 
+
+    color: #a8c5e8; 
+
+    font-size: 1.1rem; 
+
+    margin-top: 0.5rem; 
+
+    font-weight: 400; 
+
+} 
+
+ 
+
+/* Metric Cards */ 
+
+.metric-card { 
+
+    background: white; 
+
+    padding: 1.5rem; 
+
+    border-radius: 10px; 
+
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08); 
+
+    border-left: 4px solid #003087; 
+
+    transition: transform 0.2s, box-shadow 0.2s; 
+
+} 
+
+ 
+
+.metric-card:hover { 
+
+    transform: translateY(-2px); 
+
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12); 
+
+} 
+
+ 
+
+.metric-label { 
+
+    color: #64748b; 
+
+    font-size: 0.875rem; 
+
+    font-weight: 500; 
+
+    text-transform: uppercase; 
+
+    letter-spacing: 0.5px; 
+
+    margin-bottom: 0.5rem; 
+
+} 
+
+ 
+
+.metric-value { 
+
+    color: #003087; 
+
+    font-size: 2rem; 
+
+    font-weight: 700; 
+
+    line-height: 1; 
+
+} 
+
+ 
+
+.metric-delta { 
+
+    color: #10b981; 
+
+    font-size: 0.875rem; 
+
+    margin-top: 0.5rem; 
+
+} 
+
+ 
+
+/* Sidebar Styling */ 
+
+.css-1d391kg, [data-testid="stSidebar"] { 
+
+    background: linear-gradient(180deg, #003087 0%, #0052CC 100%); 
+
+} 
+
+ 
+
+.css-1d391kg .sidebar-content { 
+
+    color: white; 
+
+} 
+
+ 
+
+/* Section Headers */ 
+
+.section-header { 
+
+    color: #003087; 
+
+    font-size: 1.5rem; 
+
+    font-weight: 600; 
+
+    margin: 2rem 0 1rem 0; 
+
+    padding-bottom: 0.5rem; 
+
+    border-bottom: 2px solid #e2e8f0; 
+
+} 
+
+ 
+
+/* Alert Box */ 
+
+.alert-box { 
+
+    background: #fef3c7; 
+
+    border-left: 4px solid #f59e0b; 
+
+    padding: 1rem 1.5rem; 
+
+    border-radius: 8px; 
+
+    margin: 1rem 0; 
+
+} 
+
+ 
+
+.alert-box.critical { 
+
+    background: #fee2e2; 
+
+    border-left-color: #dc2626; 
+
+} 
+
+ 
+
+.alert-box.success { 
+
+    background: #d1fae5; 
+
+    border-left-color: #10b981; 
+
+} 
+
+ 
+
+/* Status Badge */ 
+
+.status-badge { 
+
+    display: inline-block; 
+
+    padding: 0.25rem 0.75rem; 
+
+    border-radius: 20px; 
+
+    font-size: 0.75rem; 
+
+    font-weight: 600; 
+
+    text-transform: uppercase; 
+
+    letter-spacing: 0.5px; 
+
+} 
+
+ 
+
+.status-high { 
+
+    background: #fee2e2; 
+
+    color: #991b1b; 
+
+} 
+
+ 
+
+.status-medium { 
+
+    background: #fef3c7; 
+
+    color: #92400e; 
+
+} 
+
+ 
+
+.status-low { 
+
+    background: #d1fae5; 
+
+    color: #065f46; 
+
+} 
+
+ 
+
+/* Chart Container */ 
+
+.chart-container { 
+
+    background: white; 
+
+    padding: 1.5rem; 
+
+    border-radius: 10px; 
+
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08); 
+
+    margin-bottom: 1.5rem; 
+
+} 
+
+ 
+
+/* Boeing Logo Space */ 
+
+.logo-space { 
+
+    text-align: right; 
+
+    color: white; 
+
+    font-weight: 600; 
+
+    font-size: 1.5rem; 
+
+    letter-spacing: 2px; 
+
+} 
+
+ 
+
+h1, h2, h3 { 
+
+    color: #003087; 
+
+} 
+
+ 
+
+[data-testid="stMetricValue"] { 
+
+    color: #003087 !important; 
+
+    font-size: 1.75rem !important; 
+
+    font-weight: 700 !important; 
+
+} 
+
+ 
+
+[data-testid="stMetricLabel"] { 
+
+    color: #64748b !important; 
+
+    font-size: 0.875rem !important; 
+
+    font-weight: 500 !important; 
+
+} 
+
+ 
+
+.stButton>button { 
+
+    background: #003087; 
+
+    color: white; 
+
+    border: none; 
+
+    border-radius: 6px; 
+
+    padding: 0.5rem 1.5rem; 
+
+    font-weight: 600; 
+
+    transition: all 0.2s; 
+
+} 
+
+ 
+
+.stButton>button:hover { 
+
+    background: #0052CC; 
+
+    box-shadow: 0 4px 12px rgba(0,48,135,0.3); 
+
+} 
+
+ 
+
+/* Sidebar Styling */ 
+
+[data-testid="stSidebar"] { 
+
+    background: #1e293b; 
+
+} 
+
+ 
+
+[data-testid="stSidebar"] .stMarkdown { 
+
+    color: white; 
+
+} 
+
+ 
+
+</style> 
+
+""", unsafe_allow_html=True) 
+
+ 
+
+# ========================= 
+
+# SIDEBAR (Upload & Filters) 
+
+# ========================= 
+
+with st.sidebar: 
+
+    st.markdown(""" 
+
+    <div style='text-align: center; padding: 1rem 0 2rem 0;'> 
+
+        <h2 style='color: white; margin: 0; font-size: 1.8rem; letter-spacing: 3px;'>BOEING</h2> 
+
+        <p style='color: #94a3b8; font-size: 0.75rem; margin-top: 0.25rem;'>Digital Oversight System</p> 
+
+    </div> 
+
+    """, unsafe_allow_html=True) 
+
+     
+
+    st.markdown("### 📂 Data Upload") 
+
+    uploaded_file = st.file_uploader("Upload Forecast CSV", type=["csv"], label_visibility="collapsed") 
+
+     
+
+    if uploaded_file is None: 
+
+        st.info("👆 Upload your Digital_Oversight_Forecast.csv file to begin") 
+
+        st.stop() 
+
+ 
+
+# Load Data 
+
+df = pd.read_csv(uploaded_file) 
+
+ 
+
+# Convert Risk Level to Numeric Score 
+
+risk_mapping = {"Low": 1, "Medium": 2, "High": 3} 
+
+df["Risk_Score"] = df["Risk_Level"].map(risk_mapping) 
+
+ 
+
+# Sidebar Filters 
+
+with st.sidebar: 
+
+    st.markdown("### 🔍 Filters") 
+
+     
+
+    year_range = st.slider( 
+
+        "Year Range", 
+
+        int(df["Year"].min()), 
+
+        int(df["Year"].max()), 
+
+        (int(df["Year"].min()), int(df["Year"].max())) 
+
+    ) 
+
+     
+
+    risk_levels = st.multiselect( 
+
+        "Risk Levels", 
+
+        df["Risk_Level"].unique(), 
+
+        default=df["Risk_Level"].unique() 
+
+    ) 
+
+     
+
+    st.markdown("---") 
+
+    st.markdown("### 📊 Quick Stats") 
+
+    st.metric("Total Years", len(df_filtered := df[(df["Year"] >= year_range[0]) & (df["Year"] <= year_range[1]) & df["Risk_Level"].isin(risk_levels)])) 
+
+    st.metric("Avg Gap", f"{df_filtered['Predicted_Gap'].mean():.1f}") 
+
+ 
+
+# Apply Filters 
+
+df_filtered = df[(df["Year"] >= year_range[0]) & (df["Year"] <= year_range[1])] 
+
+df_filtered = df_filtered[df_filtered["Risk_Level"].isin(risk_levels)] 
+
+ 
+
+# ========================= 
+
+# HEADER 
+
+# ========================= 
+
+st.markdown(""" 
+
+<div class='dashboard-header'> 
+
+    <div style='display: flex; justify-content: space-between; align-items: center;'> 
+
+        <div> 
+
+            <h1 class='dashboard-title'>Digital Oversight Dashboard</h1> 
+
+            <p class='dashboard-subtitle'>Supply Chain Intelligence & Risk Management System</p> 
+
+        </div> 
+
+        <div class='logo-space'> 
+
+            ✈️ 
+
+        </div> 
+
+    </div> 
+
+</div> 
+
+""", unsafe_allow_html=True) 
+
+ 
+
+# ========================= 
+
+# KEY METRICS WITH ENHANCED CARDS 
+
+# ========================= 
+
+col1, col2, col3, col4 = st.columns(4) 
+
+ 
+
+with col1: 
+
+    total_gap = df_filtered['Predicted_Gap'].sum() 
+
+    st.metric( 
+
+        "Total Predicted Gap", 
+
+        f"{total_gap:,.0f}", 
+
+        delta=f"{((total_gap / df_filtered['Orders'].sum()) * 100):.1f}% of orders", 
+
+        delta_color="inverse" 
+
+    ) 
+
+ 
+
+with col2: 
+
+    high_risk_count = len(df_filtered[df_filtered['Risk_Level'] == 'High']) 
+
+    st.metric( 
+
+        "High-Risk Periods", 
+
+        high_risk_count, 
+
+        delta=f"{(high_risk_count/len(df_filtered)*100):.0f}% of timeline" 
+
+    ) 
+
+ 
+
+with col3: 
+
+    critical_year = df_filtered.loc[df_filtered['Risk_Score'].idxmax(), 'Year'] 
+
+    critical_gap = df_filtered.loc[df_filtered['Risk_Score'].idxmax(), 'Predicted_Gap'] 
+
+    st.metric( 
+
+        "Critical Year", 
+
+        f"{critical_year}", 
+
+        delta=f"Gap: {critical_gap:,.0f}", 
+
+        delta_color="inverse" 
+
+    ) 
+
+ 
+
+with col4: 
+
+    total_orders = df_filtered['Orders'].sum() 
+
+    avg_orders = df_filtered['Orders'].mean() 
+
+    st.metric( 
+
+        "Total Orders", 
+
+        f"{total_orders:,.0f}", 
+
+        delta=f"Avg: {avg_orders:,.0f}/yr" 
+
+    ) 
+
+ 
+
+# Risk Alert Banner 
+
+high_risk_years = df_filtered[df_filtered['Risk_Level'] == 'High']['Year'].tolist() 
+
+if high_risk_years: 
+
+    st.markdown(f""" 
+
+    <div class='alert-box critical'> 
+
+        <strong>⚠️ Critical Alert:</strong> High-risk periods detected in years: <strong>{', '.join(map(str, high_risk_years))}</strong> 
+
+        <br>Immediate action required for supplier oversight and capacity planning. 
+
+    </div> 
+
+    """, unsafe_allow_html=True) 
+
+ 
+
+# ========================= 
+
+# MAIN VISUALIZATIONS 
+
+# ========================= 
+
+st.markdown("<h2 class='section-header'>📈 Production Analysis & Forecasting</h2>", unsafe_allow_html=True) 
+
+ 
+
+col1, col2 = st.columns([3, 2]) 
+
+ 
+
+with col1: 
+
+    # Enhanced Production Gap Chart 
+
+    fig1 = go.Figure() 
+
+     
+
+    fig1.add_trace(go.Scatter( 
+
+        x=df_filtered['Year'], 
+
+        y=df_filtered['ProductionGap'], 
+
+        name='Actual Gap', 
+
+        mode='lines+markers', 
+
+        line=dict(color='#94a3b8', width=3), 
+
+        marker=dict(size=8, color='#94a3b8') 
+
+    )) 
+
+     
+
+    fig1.add_trace(go.Scatter( 
+
+        x=df_filtered['Year'], 
+
+        y=df_filtered['Predicted_Gap'], 
+
+        name='Predicted Gap', 
+
+        mode='lines+markers', 
+
+        line=dict(color='#003087', width=4), 
+
+        marker=dict(size=10, color='#003087', symbol='diamond') 
+
+    )) 
+
+     
+
+    fig1.update_layout( 
+
+        title={ 
+
+            'text': 'Production Gap: Actual vs Predicted (2021-2028)', 
+
+            'x': 0.5, 
+
+            'xanchor': 'center', 
+
+            'font': {'size': 18, 'color': '#003087', 'family': 'Inter'} 
+
+        }, 
+
+        xaxis_title='Year', 
+
+        yaxis_title='Gap (Units)', 
+
+        template='plotly_white', 
+
+        height=450, 
+
+        hovermode='x unified', 
+
+        legend=dict( 
+
+            orientation="h", 
+
+            yanchor="bottom", 
+
+            y=1.02, 
+
+            xanchor="right", 
+
+            x=1 
+
+        ), 
+
+        plot_bgcolor='rgba(0,0,0,0)', 
+
+        paper_bgcolor='rgba(0,0,0,0)' 
+
+    ) 
+
+     
+
+    fig1.update_xaxes(showgrid=True, gridwidth=1, gridcolor='#e2e8f0') 
+
+    fig1.update_yaxes(showgrid=True, gridwidth=1, gridcolor='#e2e8f0') 
+
+     
+
+    st.plotly_chart(fig1, use_container_width=True, config={'displayModeBar': False}) 
+
+ 
+
+with col2: 
+
+    # Risk Distribution Gauge 
+
+    risk_counts = df_filtered['Risk_Level'].value_counts() 
+
+     
+
+    fig_gauge = go.Figure(go.Indicator( 
+
+        mode="gauge+number+delta", 
+
+        value=df_filtered['Risk_Score'].mean(), 
+
+        title={'text': "Average Risk Level", 'font': {'size': 16, 'color': '#003087'}}, 
+
+        delta={'reference': 2, 'increasing': {'color': "#dc2626"}}, 
+
+        gauge={ 
+
+            'axis': {'range': [None, 3], 'tickwidth': 1, 'tickcolor': "#003087"}, 
+
+            'bar': {'color': "#003087"}, 
+
+            'bgcolor': "white", 
+
+            'borderwidth': 2, 
+
+            'bordercolor': "#e2e8f0", 
+
+            'steps': [ 
+
+                {'range': [0, 1], 'color': '#d1fae5'}, 
+
+                {'range': [1, 2], 'color': '#fef3c7'}, 
+
+                {'range': [2, 3], 'color': '#fee2e2'} 
+
+            ], 
+
+            'threshold': { 
+
+                'line': {'color': "red", 'width': 4}, 
+
+                'thickness': 0.75, 
+
+                'value': 2.5 
+
+            } 
+
+        } 
+
+    )) 
+
+     
+
+    fig_gauge.update_layout( 
+
+        height=250, 
+
+        margin=dict(l=20, r=20, t=50, b=20), 
+
+        paper_bgcolor='rgba(0,0,0,0)', 
+
+        font={'family': 'Inter'} 
+
+    ) 
+
+     
+
+    st.plotly_chart(fig_gauge, use_container_width=True, config={'displayModeBar': False}) 
+
+     
+
+    # Risk Distribution 
+
+    st.markdown("#### Risk Distribution") 
+
+    for level in ['High', 'Medium', 'Low']: 
+
+        if level in risk_counts.index: 
+
+            count = risk_counts[level] 
+
+            percentage = (count / len(df_filtered)) * 100 
+
+            color = {'High': '#dc2626', 'Medium': '#f59e0b', 'Low': '#10b981'}[level] 
+
+            st.markdown(f""" 
+
+            <div style='margin: 0.5rem 0;'> 
+
+                <div style='display: flex; justify-content: space-between; margin-bottom: 0.25rem;'> 
+
+                    <span style='font-weight: 600; color: #64748b;'>{level}</span> 
+
+                    <span style='color: {color}; font-weight: 600;'>{count} ({percentage:.0f}%)</span> 
+
+                </div> 
+
+                <div style='background: #e2e8f0; border-radius: 10px; height: 8px; overflow: hidden;'> 
+
+                    <div style='background: {color}; width: {percentage}%; height: 100%;'></div> 
+
+                </div> 
+
+            </div> 
+
+            """, unsafe_allow_html=True) 
+
+ 
+
+# ========================= 
+
+# ORDERS vs GAP ANALYSIS 
+
+# ========================= 
+
+st.markdown("<h2 class='section-header'>🎯 Orders & Gap Correlation</h2>", unsafe_allow_html=True) 
+
+ 
+
+fig2 = make_subplots( 
+
+    rows=1, cols=2, 
+
+    subplot_titles=('Orders vs Predicted Gap', 'Year-over-Year Risk Progression'), 
+
+    specs=[[{"secondary_y": False}, {"type": "bar"}]] 
+
+) 
+
+ 
+
+# Scatter plot 
+
+fig2.add_trace( 
+
+    go.Scatter( 
+
+        x=df_filtered['Orders'], 
+
+        y=df_filtered['Predicted_Gap'], 
+
+        mode='markers', 
+
+        marker=dict( 
+
+            size=df_filtered['Risk_Score']*10, 
+
+            color=df_filtered['Risk_Score'], 
+
+            colorscale=[[0, '#10b981'], [0.5, '#f59e0b'], [1, '#dc2626']], 
+
+            showscale=True, 
+
+            colorbar=dict(title="Risk", x=0.45) 
+
+        ), 
+
+        text=df_filtered['Year'], 
+
+        hovertemplate='<b>Year %{text}</b><br>Orders: %{x}<br>Gap: %{y}<extra></extra>', 
+
+        name='Year Data' 
+
+    ), 
+
+    row=1, col=1 
+
+) 
+
+ 
+
+# Risk bar chart 
+
+colors_map = {'Low': '#10b981', 'Medium': '#f59e0b', 'High': '#dc2626'} 
+
+fig2.add_trace( 
+
+    go.Bar( 
+
+        x=df_filtered['Year'], 
+
+        y=df_filtered['Risk_Score'], 
+
+        marker_color=[colors_map[level] for level in df_filtered['Risk_Level']], 
+
+        text=df_filtered['Risk_Level'], 
+
+        textposition='outside', 
+
+        name='Risk Level', 
+
+        hovertemplate='<b>%{x}</b><br>Risk: %{text}<extra></extra>' 
+
+    ), 
+
+    row=1, col=2 
+
+) 
+
+ 
+
+fig2.update_xaxes(title_text="Orders", row=1, col=1, showgrid=True, gridcolor='#e2e8f0') 
+
+fig2.update_yaxes(title_text="Predicted Gap", row=1, col=1, showgrid=True, gridcolor='#e2e8f0') 
+
+fig2.update_xaxes(title_text="Year", row=1, col=2, showgrid=False) 
+
+fig2.update_yaxes(title_text="Risk Score", row=1, col=2, showgrid=True, gridcolor='#e2e8f0') 
+
+ 
+
+fig2.update_layout( 
+
+    height=400, 
+
+    showlegend=False, 
+
+    template='plotly_white', 
+
+    paper_bgcolor='rgba(0,0,0,0)', 
+
+    plot_bgcolor='rgba(0,0,0,0)', 
+
+    font={'family': 'Inter'} 
+
+) 
+
+ 
+
+st.plotly_chart(fig2, use_container_width=True, config={'displayModeBar': False}) 
+
+ 
+
+# ========================= 
+
+# IMPLEMENTATION ROADMAP 
+
+# ========================= 
+
+st.markdown("<h2 class='section-header'>🗺️ Implementation Roadmap 2025</h2>", unsafe_allow_html=True) 
+
+ 
+
+phases = pd.DataFrame([ 
+
+    dict(Phase='Phase 1: Planning & Vendor Setup', Start='2025-01-01', Finish='2025-02-28', Category='Planning', Progress=100), 
+
+    dict(Phase='Phase 2: Telemetry Installation', Start='2025-03-01', Finish='2025-04-30', Category='Implementation', Progress=75), 
+
+    dict(Phase='Phase 3: Supplier Integration', Start='2025-05-01', Finish='2025-06-30', Category='Integration', Progress=45), 
+
+    dict(Phase='Phase 4: Pilot & Analytics', Start='2025-07-01', Finish='2025-10-31', Category='Analytics', Progress=20), 
+
+    dict(Phase='Phase 5: Dashboard Deployment', Start='2025-11-01', Finish='2025-12-15', Category='Deployment', Progress=0), 
+
+    dict(Phase='Phase 6: Review & Scale Decision', Start='2025-12-16', Finish='2025-12-31', Category='Review', Progress=0) 
+
+]) 
+
+phases["Start"] = pd.to_datetime(phases["Start"]) 
+
+phases["Finish"] = pd.to_datetime(phases["Finish"]) 
+
+ 
+
+colors = { 
+
+    'Planning': '#003087', 
+
+    'Implementation': '#0052CC', 
+
+    'Integration': '#2563eb', 
+
+    'Analytics': '#3b82f6', 
+
+    'Deployment': '#60a5fa', 
+
+    'Review': '#93c5fd' 
+
+} 
+
+ 
+
+fig3 = px.timeline( 
+
+    phases, 
+
+    x_start="Start", 
+
+    x_end="Finish", 
+
+    y="Phase", 
+
+    color="Category", 
+
+    color_discrete_map=colors, 
+
+    title="Project Timeline & Progress" 
+
+) 
+
+ 
+
+fig3.update_yaxes(autorange="reversed") 
+
+fig3.update_layout( 
+
+    height=400, 
+
+    title={ 
+
+        'x': 0.5, 
+
+        'xanchor': 'center', 
+
+        'font': {'size': 18, 'color': '#003087', 'family': 'Inter'} 
+
+    }, 
+
+    template='plotly_white', 
+
+    paper_bgcolor='rgba(0,0,0,0)', 
+
+    plot_bgcolor='rgba(0,0,0,0)', 
+
+    xaxis_title='Timeline', 
+
+    yaxis_title='', 
+
+    font={'family': 'Inter'} 
+
+) 
+
+ 
+
+st.plotly_chart(fig3, use_container_width=True, config={'displayModeBar': False}) 
+
+ 
+
+# Progress indicators 
+
+col1, col2, col3, col4, col5, col6 = st.columns(6) 
+
+for idx, (col, row) in enumerate(zip([col1, col2, col3, col4, col5, col6], phases.itertuples())): 
+
+    with col: 
+
+        st.markdown(f""" 
+
+        <div style='text-align: center; padding: 1rem; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);'> 
+
+            <div style='font-size: 1.5rem; font-weight: 700; color: #003087;'>{row.Progress}%</div> 
+
+            <div style='font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;'>{row.Category}</div> 
+
+        </div> 
+
+        """, unsafe_allow_html=True) 
+
+ 
+
+# ========================= 
+
+# STRATEGIC RECOMMENDATIONS 
+
+# ========================= 
+
+st.markdown("<h2 class='section-header'>💡 Strategic Recommendations</h2>", unsafe_allow_html=True) 
+
+ 
+
+col1, col2 = st.columns(2) 
+
+ 
+
+with col1: 
+
+    st.markdown(""" 
+
+    <div class='alert-box critical'> 
+
+        <h4 style='margin-top: 0; color: #991b1b;'>🚨 Critical Actions</h4> 
+
+        <ul style='margin-bottom: 0;'> 
+
+            <li>Implement real-time telemetry for high-risk suppliers</li> 
+
+            <li>Establish automated alert system for KPI deviations</li> 
+
+            <li>Increase oversight frequency during 2026-2027 period</li> 
+
+        </ul> 
+
+    </div> 
+
+    """, unsafe_allow_html=True) 
+
+     
+
+    st.markdown(""" 
+
+    <div class='alert-box success'> 
+
+        <h4 style='margin-top: 0; color: #065f46;'>✅ Quick Wins</h4> 
+
+        <ul style='margin-bottom: 0;'> 
+
+            <li>Deploy dashboard for leadership visibility</li> 
+
+            <li>Integrate supplier portals with central monitoring</li> 
+
+            <li>Automate weekly risk reports</li> 
+
+        </ul> 
+
+    </div> 
+
+    """, unsafe_allow_html=True) 
+
+ 
+
+with col2: 
+
+    st.markdown(""" 
+
+    <div class='alert-box'> 
+
+        <h4 style='margin-top: 0; color: #92400e;'>📋 Long-term Strategy</h4> 
+
+        <ul style='margin-bottom: 0;'> 
+
+            <li>Build predictive capacity planning models</li> 
+
+            <li>Expand digital oversight to tier-2 suppliers</li> 
+
+            <li>Develop supplier performance scorecards</li> 
+
+            <li>Invest in AI-powered anomaly detection</li> 
+
+        </ul> 
+
+    </div> 
+
+    """, unsafe_allow_html=True) 
+
+ 
+
+# ========================= 
+
+# DATA TABLE 
+
+# ========================= 
+
+with st.expander("📊 View Detailed Data Table"): 
+
+    st.dataframe( 
+
+        df_filtered.style.background_gradient(subset=['Risk_Score'], cmap='RdYlGn_r'), 
+
+        use_container_width=True, 
+
+        height=400 
+
+    ) 
+
+ 
+
+# ========================= 
+
+# FOOTER 
+
+# ========================= 
+
+st.markdown("<br><br>", unsafe_allow_html=True) 
+
+st.markdown(""" 
+
+<div style='text-align: center; padding: 2rem 0 1rem 0; border-top: 2px solid #e2e8f0;'> 
+
+    <p style='color: #64748b; font-size: 0.875rem; margin: 0;'> 
+
+        <strong>Boeing Digital Oversight System</strong> | Version 2.0 | © 2025 The Boeing Company 
+
+    </p> 
+
+    <p style='color: #94a3b8; font-size: 0.75rem; margin-top: 0.5rem;'> 
+
+        Powered by Advanced Analytics & Machine Learning | Last Updated: November 2025 
+
+    </p> 
+
+</div> 
+
+""", unsafe_allow_html=True) 
