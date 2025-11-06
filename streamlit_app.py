@@ -134,16 +134,16 @@ if high_risk_years:
     """, unsafe_allow_html=True)
 
 # =========================
-# TABS FOR INTERACTIVE DASHBOARD
+# TABS
 # =========================
-tab1, tab2, tab3 = st.tabs(["Overview", "Production Analysis", "Supplier Risk"])
+tab1, tab2, tab3, tab4 = st.tabs(["Overview", "Production Analysis", "Supplier Risk", "Implementation Roadmap"])
 
 # -------------------------
 # OVERVIEW TAB
 # -------------------------
 with tab1:
     st.markdown("<h2 class='section-header'>📈 Summary Metrics</h2>", unsafe_allow_html=True)
-    st.write("Use sidebar to adjust year range, risk levels, suppliers, and gap adjustments.")
+    st.write("Use the sidebar to filter years, risk levels, suppliers, and adjust predicted gaps dynamically.")
 
 # -------------------------
 # PRODUCTION ANALYSIS TAB
@@ -207,6 +207,32 @@ with tab3:
     fig2.update_layout(height=400, showlegend=False, template='plotly_white', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
     st.plotly_chart(fig2, use_container_width=True, config={'displayModeBar': False})
 
+# -------------------------
+# IMPLEMENTATION ROADMAP TAB
+# -------------------------
+with tab4:
+    st.markdown("<h2 class='section-header'>🗺️ Implementation Roadmap 2025</h2>", unsafe_allow_html=True)
+    phases = pd.DataFrame([
+        dict(Phase='Phase 1: Planning & Vendor Setup', Start='2025-01-01', Finish='2025-02-28', Category='Planning', Progress=100),
+        dict(Phase='Phase 2: Telemetry Installation', Start='2025-03-01', Finish='2025-04-30', Category='Implementation', Progress=75),
+        dict(Phase='Phase 3: Supplier Integration', Start='2025-05-01', Finish='2025-06-30', Category='Integration', Progress=45),
+        dict(Phase='Phase 4: Pilot & Analytics', Start='2025-07-01', Finish='2025-10-31', Category='Analytics', Progress=20),
+        dict(Phase='Phase 5: Dashboard Deployment', Start='2025-11-01', Finish='2025-12-15', Category='Deployment', Progress=0),
+        dict(Phase='Phase 6: Review & Scale Decision', Start='2025-12-16', Finish='2025-12-31', Category='Review', Progress=0)
+    ])
+    phases["Start"] = pd.to_datetime(phases["Start"])
+    phases["Finish"] = pd.to_datetime(phases["Finish"])
+    colors = {'Planning': '#003087','Implementation': '#0052CC','Integration': '#2563eb','Analytics': '#3b82f6','Deployment': '#60a5fa','Review': '#93c5fd'}
+    fig3 = px.timeline(phases, x_start="Start", x_end="Finish", y="Phase", color="Category", color_discrete_map=colors)
+    fig3.update_yaxes(autorange="reversed")
+    fig3.update_layout(height=400, title={'x': 0.5, 'xanchor':'center'}, template='plotly_white', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+    st.plotly_chart(fig3, use_container_width=True, config={'displayModeBar': False})
+
+    cols = st.columns(6)
+    for col, row in zip(cols, phases.itertuples()):
+        with col:
+            st.markdown(f"<div style='text-align:center;padding:1rem;background:white;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);'><div style='font-size:1.5rem;font-weight:700;color:#003087;'>{row.Progress}%</div><div style='font-size:0.75rem;color:#64748b;margin-top:0.25rem;'>{row.Category}</div></div>", unsafe_allow_html=True)
+
 # =========================
 # DATA TABLE WITH DOWNLOAD
 # =========================
@@ -228,4 +254,3 @@ st.markdown("""
     <p style='color:#94a3b8; font-size:0.75rem; margin-top:0.5rem;'>Powered by Advanced Analytics & Machine Learning | Last Updated: November 2025</p>
 </div>
 """, unsafe_allow_html=True)
-
