@@ -424,4 +424,4 @@ st.markdown("""
     <p class='footer-meta'>© 2025 The Boeing Company | Powered by Advanced Analytics & Machine Learning<br>
     Last Updated: November 2025 | Confidential & Proprietary</p>
 </div>
-""", unsafe_allow_
+""", unsafe_allow_html=True)
