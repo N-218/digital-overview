@@ -8,6 +8,8 @@ import plotly.graph_objects as go
 
 from plotly.subplots import make_subplots 
 
+import numpy as np 
+
  
 
 # ========================= 
@@ -164,36 +166,6 @@ st.markdown("""
 
  
 
-.metric-delta { 
-
-    color: #10b981; 
-
-    font-size: 0.875rem; 
-
-    margin-top: 0.5rem; 
-
-} 
-
- 
-
-/* Sidebar Styling */ 
-
-.css-1d391kg, [data-testid="stSidebar"] { 
-
-    background: linear-gradient(180deg, #003087 0%, #0052CC 100%); 
-
-} 
-
- 
-
-.css-1d391kg .sidebar-content { 
-
-    color: white; 
-
-} 
-
- 
-
 /* Section Headers */ 
 
 .section-header { 
@@ -247,94 +219,6 @@ st.markdown("""
     background: #d1fae5; 
 
     border-left-color: #10b981; 
-
-} 
-
- 
-
-/* Status Badge */ 
-
-.status-badge { 
-
-    display: inline-block; 
-
-    padding: 0.25rem 0.75rem; 
-
-    border-radius: 20px; 
-
-    font-size: 0.75rem; 
-
-    font-weight: 600; 
-
-    text-transform: uppercase; 
-
-    letter-spacing: 0.5px; 
-
-} 
-
- 
-
-.status-high { 
-
-    background: #fee2e2; 
-
-    color: #991b1b; 
-
-} 
-
- 
-
-.status-medium { 
-
-    background: #fef3c7; 
-
-    color: #92400e; 
-
-} 
-
- 
-
-.status-low { 
-
-    background: #d1fae5; 
-
-    color: #065f46; 
-
-} 
-
- 
-
-/* Chart Container */ 
-
-.chart-container { 
-
-    background: white; 
-
-    padding: 1.5rem; 
-
-    border-radius: 10px; 
-
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08); 
-
-    margin-bottom: 1.5rem; 
-
-} 
-
- 
-
-/* Boeing Logo Space */ 
-
-.logo-space { 
-
-    text-align: right; 
-
-    color: white; 
-
-    font-weight: 600; 
-
-    font-size: 1.5rem; 
-
-    letter-spacing: 2px; 
 
 } 
 
@@ -456,7 +340,7 @@ with st.sidebar:
 
     if uploaded_file is None: 
 
-        st.info("👆 Upload your Digital_Oversight_Forecast.csv file to begin") 
+        st.info("👆 Upload your CSV file to begin") 
 
         st.stop() 
 
@@ -468,11 +352,31 @@ df = pd.read_csv(uploaded_file)
 
  
 
+# Clean column names (remove any extra spaces) 
+
+df.columns = df.columns.str.strip() 
+
+ 
+
 # Convert Risk Level to Numeric Score 
 
 risk_mapping = {"Low": 1, "Medium": 2, "High": 3} 
 
 df["Risk_Score"] = df["Risk_Level"].map(risk_mapping) 
+
+ 
+
+# Fill NaN values with 0 for numeric columns 
+
+numeric_cols = ['PlannedOutput', 'ActualOutput', 'Orders', 'Backlog', 'ProductionGap',  
+
+                'Predicted_Gap', 'NetLoss', 'ForwardLosses', 'ExcessCapacityCost'] 
+
+for col in numeric_cols: 
+
+    if col in df.columns: 
+
+        df[col] = df[col].fillna(0) 
 
  
 
@@ -498,13 +402,15 @@ with st.sidebar:
 
      
 
+    available_risks = df["Risk_Level"].dropna().unique().tolist() 
+
     risk_levels = st.multiselect( 
 
         "Risk Levels", 
 
-        df["Risk_Level"].unique(), 
+        available_risks, 
 
-        default=df["Risk_Level"].unique() 
+        default=available_risks 
 
     ) 
 
@@ -512,11 +418,9 @@ with st.sidebar:
 
     st.markdown("---") 
 
-    st.markdown("### 📊 Quick Stats") 
+    st.markdown("### 📊 Dashboard Info") 
 
-    st.metric("Total Years", len(df_filtered := df[(df["Year"] >= year_range[0]) & (df["Year"] <= year_range[1]) & df["Risk_Level"].isin(risk_levels)])) 
-
-    st.metric("Avg Gap", f"{df_filtered['Predicted_Gap'].mean():.1f}") 
+    st.info("Displaying production, backlog, and risk metrics for Boeing supply chain oversight") 
 
  
 
@@ -524,7 +428,9 @@ with st.sidebar:
 
 df_filtered = df[(df["Year"] >= year_range[0]) & (df["Year"] <= year_range[1])] 
 
-df_filtered = df_filtered[df_filtered["Risk_Level"].isin(risk_levels)] 
+if risk_levels: 
+
+    df_filtered = df_filtered[df_filtered["Risk_Level"].isin(risk_levels)] 
 
  
 
@@ -548,7 +454,7 @@ st.markdown("""
 
         </div> 
 
-        <div class='logo-space'> 
+        <div style='text-align: right; color: white; font-weight: 600; font-size: 1.5rem; letter-spacing: 2px;'> 
 
             ✈️ 
 
@@ -564,27 +470,25 @@ st.markdown("""
 
 # ========================= 
 
-# KEY METRICS WITH ENHANCED CARDS 
+# KEY METRICS 
 
 # ========================= 
 
-col1, col2, col3, col4 = st.columns(4) 
+col1, col2, col3, col4, col5 = st.columns(5) 
 
  
 
 with col1: 
 
-    total_gap = df_filtered['Predicted_Gap'].sum() 
+    total_orders = df_filtered['Orders'].sum() 
 
     st.metric( 
 
-        "Total Predicted Gap", 
+        "Total Orders", 
 
-        f"{total_gap:,.0f}", 
+        f"{total_orders:,.0f}", 
 
-        delta=f"{((total_gap / df_filtered['Orders'].sum()) * 100):.1f}% of orders", 
-
-        delta_color="inverse" 
+        delta=None 
 
     ) 
 
@@ -592,15 +496,15 @@ with col1:
 
 with col2: 
 
-    high_risk_count = len(df_filtered[df_filtered['Risk_Level'] == 'High']) 
+    total_backlog = df_filtered['Backlog'].sum() 
 
     st.metric( 
 
-        "High-Risk Periods", 
+        "Total Backlog", 
 
-        high_risk_count, 
+        f"{total_backlog:,.0f}", 
 
-        delta=f"{(high_risk_count/len(df_filtered)*100):.0f}% of timeline" 
+        delta=None 
 
     ) 
 
@@ -608,17 +512,15 @@ with col2:
 
 with col3: 
 
-    critical_year = df_filtered.loc[df_filtered['Risk_Score'].idxmax(), 'Year'] 
-
-    critical_gap = df_filtered.loc[df_filtered['Risk_Score'].idxmax(), 'Predicted_Gap'] 
+    total_gap = df_filtered['ProductionGap'].sum() 
 
     st.metric( 
 
-        "Critical Year", 
+        "Production Gap", 
 
-        f"{critical_year}", 
+        f"{total_gap:,.0f}", 
 
-        delta=f"Gap: {critical_gap:,.0f}", 
+        delta="Actual", 
 
         delta_color="inverse" 
 
@@ -628,17 +530,33 @@ with col3:
 
 with col4: 
 
-    total_orders = df_filtered['Orders'].sum() 
-
-    avg_orders = df_filtered['Orders'].mean() 
+    predicted_gap = df_filtered['Predicted_Gap'].sum() 
 
     st.metric( 
 
-        "Total Orders", 
+        "Predicted Gap", 
 
-        f"{total_orders:,.0f}", 
+        f"{predicted_gap:,.1f}", 
 
-        delta=f"Avg: {avg_orders:,.0f}/yr" 
+        delta="Forecast", 
+
+        delta_color="inverse" 
+
+    ) 
+
+ 
+
+with col5: 
+
+    high_risk_count = len(df_filtered[df_filtered['Risk_Level'] == 'High']) 
+
+    st.metric( 
+
+        "High-Risk Years", 
+
+        high_risk_count, 
+
+        delta=f"{(high_risk_count/len(df_filtered)*100) if len(df_filtered) > 0 else 0:.0f}%" 
 
     ) 
 
@@ -666,39 +584,57 @@ if high_risk_years:
 
 # ========================= 
 
-# MAIN VISUALIZATIONS 
+# PRODUCTION ANALYSIS 
 
 # ========================= 
 
-st.markdown("<h2 class='section-header'>📈 Production Analysis & Forecasting</h2>", unsafe_allow_html=True) 
+st.markdown("<h2 class='section-header'>📈 Production & Output Analysis</h2>", unsafe_allow_html=True) 
 
  
 
-col1, col2 = st.columns([3, 2]) 
+col1, col2 = st.columns(2) 
 
  
 
 with col1: 
 
-    # Enhanced Production Gap Chart 
+    # Production vs Orders Chart 
 
     fig1 = go.Figure() 
 
      
 
-    fig1.add_trace(go.Scatter( 
+    # Filter data for years with actual values 
 
-        x=df_filtered['Year'], 
+    df_actual = df_filtered[df_filtered['PlannedOutput'] > 0] 
 
-        y=df_filtered['ProductionGap'], 
+     
 
-        name='Actual Gap', 
+    fig1.add_trace(go.Bar( 
 
-        mode='lines+markers', 
+        x=df_actual['Year'], 
 
-        line=dict(color='#94a3b8', width=3), 
+        y=df_actual['PlannedOutput'], 
 
-        marker=dict(size=8, color='#94a3b8') 
+        name='Planned Output', 
+
+        marker_color='#60a5fa', 
+
+        opacity=0.7 
+
+    )) 
+
+     
+
+    fig1.add_trace(go.Bar( 
+
+        x=df_actual['Year'], 
+
+        y=df_actual['ActualOutput'], 
+
+        name='Actual Output', 
+
+        marker_color='#003087' 
 
     )) 
 
@@ -706,17 +642,17 @@ with col1:
 
     fig1.add_trace(go.Scatter( 
 
-        x=df_filtered['Year'], 
+        x=df_actual['Year'], 
 
-        y=df_filtered['Predicted_Gap'], 
+        y=df_actual['Orders'], 
 
-        name='Predicted Gap', 
+        name='Orders', 
 
         mode='lines+markers', 
 
-        line=dict(color='#003087', width=4), 
+        line=dict(color='#dc2626', width=3), 
 
-        marker=dict(size=10, color='#003087', symbol='diamond') 
+        marker=dict(size=10, symbol='diamond') 
 
     )) 
 
@@ -726,7 +662,197 @@ with col1:
 
         title={ 
 
-            'text': 'Production Gap: Actual vs Predicted (2021-2028)', 
+            'text': 'Production Output vs Orders', 
+
+            'x': 0.5, 
+
+            'xanchor': 'center', 
+
+            'font': {'size': 18, 'color': '#003087', 'family': 'Inter'} 
+
+        }, 
+
+        xaxis_title='Year', 
+
+        yaxis_title='Units', 
+
+        template='plotly_white', 
+
+        height=450, 
+
+        hovermode='x unified', 
+
+        barmode='group', 
+
+        legend=dict( 
+
+            orientation="h", 
+
+            yanchor="bottom", 
+
+            y=1.02, 
+
+            xanchor="right", 
+
+            x=1 
+
+        ), 
+
+        plot_bgcolor='rgba(0,0,0,0)', 
+
+        paper_bgcolor='rgba(0,0,0,0)' 
+
+    ) 
+
+     
+
+    fig1.update_xaxes(showgrid=True, gridwidth=1, gridcolor='#e2e8f0') 
+
+    fig1.update_yaxes(showgrid=True, gridwidth=1, gridcolor='#e2e8f0') 
+
+     
+
+    st.plotly_chart(fig1, use_container_width=True, config={'displayModeBar': False}) 
+
+ 
+
+with col2: 
+
+    # Backlog Trend 
+
+    fig2 = go.Figure() 
+
+     
+
+    df_backlog = df_filtered[df_filtered['Backlog'] > 0] 
+
+     
+
+    fig2.add_trace(go.Scatter( 
+
+        x=df_backlog['Year'], 
+
+        y=df_backlog['Backlog'], 
+
+        mode='lines+markers', 
+
+        name='Backlog', 
+
+        line=dict(color='#003087', width=4), 
+
+        marker=dict(size=12, color='#003087'), 
+
+        fill='tozeroy', 
+
+        fillcolor='rgba(0, 48, 135, 0.1)' 
+
+    )) 
+
+     
+
+    fig2.update_layout( 
+
+        title={ 
+
+            'text': 'Backlog Trend Over Time', 
+
+            'x': 0.5, 
+
+            'xanchor': 'center', 
+
+            'font': {'size': 18, 'color': '#003087', 'family': 'Inter'} 
+
+        }, 
+
+        xaxis_title='Year', 
+
+        yaxis_title='Backlog (Units)', 
+
+        template='plotly_white', 
+
+        height=450, 
+
+        hovermode='x unified', 
+
+        plot_bgcolor='rgba(0,0,0,0)', 
+
+        paper_bgcolor='rgba(0,0,0,0)' 
+
+    ) 
+
+     
+
+    fig2.update_xaxes(showgrid=True, gridwidth=1, gridcolor='#e2e8f0') 
+
+    fig2.update_yaxes(showgrid=True, gridwidth=1, gridcolor='#e2e8f0') 
+
+     
+
+    st.plotly_chart(fig2, use_container_width=True, config={'displayModeBar': False}) 
+
+ 
+
+# ========================= 
+
+# GAP ANALYSIS 
+
+# ========================= 
+
+st.markdown("<h2 class='section-header'>🎯 Production Gap Analysis</h2>", unsafe_allow_html=True) 
+
+ 
+
+col1, col2 = st.columns([3, 2]) 
+
+ 
+
+with col1: 
+
+    # Gap Comparison 
+
+    fig3 = go.Figure() 
+
+     
+
+    fig3.add_trace(go.Bar( 
+
+        x=df_filtered['Year'], 
+
+        y=df_filtered['ProductionGap'], 
+
+        name='Actual Gap', 
+
+        marker_color='#94a3b8', 
+
+        opacity=0.7 
+
+    )) 
+
+     
+
+    fig3.add_trace(go.Scatter( 
+
+        x=df_filtered['Year'], 
+
+        y=df_filtered['Predicted_Gap'], 
+
+        name='Predicted Gap', 
+
+        mode='lines+markers', 
+
+        line=dict(color='#dc2626', width=4), 
+
+        marker=dict(size=10, color='#dc2626', symbol='diamond') 
+
+    )) 
+
+     
+
+    fig3.update_layout( 
+
+        title={ 
+
+            'text': 'Production Gap: Actual vs Predicted', 
 
             'x': 0.5, 
 
@@ -768,249 +894,233 @@ with col1:
 
      
 
-    fig1.update_xaxes(showgrid=True, gridwidth=1, gridcolor='#e2e8f0') 
+    fig3.update_xaxes(showgrid=True, gridwidth=1, gridcolor='#e2e8f0') 
 
-    fig1.update_yaxes(showgrid=True, gridwidth=1, gridcolor='#e2e8f0') 
+    fig3.update_yaxes(showgrid=True, gridwidth=1, gridcolor='#e2e8f0') 
 
      
 
-    st.plotly_chart(fig1, use_container_width=True, config={'displayModeBar': False}) 
+    st.plotly_chart(fig3, use_container_width=True, config={'displayModeBar': False}) 
 
  
 
 with col2: 
 
-    # Risk Distribution Gauge 
+    # Risk Level by Year 
 
-    risk_counts = df_filtered['Risk_Level'].value_counts() 
-
-     
-
-    fig_gauge = go.Figure(go.Indicator( 
-
-        mode="gauge+number+delta", 
-
-        value=df_filtered['Risk_Score'].mean(), 
-
-        title={'text': "Average Risk Level", 'font': {'size': 16, 'color': '#003087'}}, 
-
-        delta={'reference': 2, 'increasing': {'color': "#dc2626"}}, 
-
-        gauge={ 
-
-            'axis': {'range': [None, 3], 'tickwidth': 1, 'tickcolor': "#003087"}, 
-
-            'bar': {'color': "#003087"}, 
-
-            'bgcolor': "white", 
-
-            'borderwidth': 2, 
-
-            'bordercolor': "#e2e8f0", 
-
-            'steps': [ 
-
-                {'range': [0, 1], 'color': '#d1fae5'}, 
-
-                {'range': [1, 2], 'color': '#fef3c7'}, 
-
-                {'range': [2, 3], 'color': '#fee2e2'} 
-
-            ], 
-
-            'threshold': { 
-
-                'line': {'color': "red", 'width': 4}, 
-
-                'thickness': 0.75, 
-
-                'value': 2.5 
-
-            } 
-
-        } 
-
-    )) 
+    colors_map = {'Low': '#10b981', 'Medium': '#f59e0b', 'High': '#dc2626'} 
 
      
 
-    fig_gauge.update_layout( 
+    fig4 = go.Figure() 
 
-        height=250, 
+     
 
-        margin=dict(l=20, r=20, t=50, b=20), 
+    for risk_level in ['Low', 'Medium', 'High']: 
 
-        paper_bgcolor='rgba(0,0,0,0)', 
+        df_risk = df_filtered[df_filtered['Risk_Level'] == risk_level] 
 
-        font={'family': 'Inter'} 
+        if not df_risk.empty: 
+
+            fig4.add_trace(go.Bar( 
+
+                x=df_risk['Year'], 
+
+                y=df_risk['Risk_Score'], 
+
+                name=risk_level, 
+
+                marker_color=colors_map[risk_level], 
+
+                text=risk_level, 
+
+                textposition='inside' 
+
+            )) 
+
+     
+
+    fig4.update_layout( 
+
+        title={ 
+
+            'text': 'Risk Assessment by Year', 
+
+            'x': 0.5, 
+
+            'xanchor': 'center', 
+
+            'font': {'size': 18, 'color': '#003087', 'family': 'Inter'} 
+
+        }, 
+
+        xaxis_title='Year', 
+
+        yaxis_title='Risk Score', 
+
+        template='plotly_white', 
+
+        height=450, 
+
+        barmode='stack', 
+
+        showlegend=True, 
+
+        legend=dict( 
+
+            orientation="h", 
+
+            yanchor="bottom", 
+
+            y=1.02, 
+
+            xanchor="right", 
+
+            x=1 
+
+        ), 
+
+        plot_bgcolor='rgba(0,0,0,0)', 
+
+        paper_bgcolor='rgba(0,0,0,0)' 
 
     ) 
 
      
 
-    st.plotly_chart(fig_gauge, use_container_width=True, config={'displayModeBar': False}) 
+    fig4.update_xaxes(showgrid=True, gridwidth=1, gridcolor='#e2e8f0') 
+
+    fig4.update_yaxes(showgrid=True, gridwidth=1, gridcolor='#e2e8f0') 
 
      
 
-    # Risk Distribution 
-
-    st.markdown("#### Risk Distribution") 
-
-    for level in ['High', 'Medium', 'Low']: 
-
-        if level in risk_counts.index: 
-
-            count = risk_counts[level] 
-
-            percentage = (count / len(df_filtered)) * 100 
-
-            color = {'High': '#dc2626', 'Medium': '#f59e0b', 'Low': '#10b981'}[level] 
-
-            st.markdown(f""" 
-
-            <div style='margin: 0.5rem 0;'> 
-
-                <div style='display: flex; justify-content: space-between; margin-bottom: 0.25rem;'> 
-
-                    <span style='font-weight: 600; color: #64748b;'>{level}</span> 
-
-                    <span style='color: {color}; font-weight: 600;'>{count} ({percentage:.0f}%)</span> 
-
-                </div> 
-
-                <div style='background: #e2e8f0; border-radius: 10px; height: 8px; overflow: hidden;'> 
-
-                    <div style='background: {color}; width: {percentage}%; height: 100%;'></div> 
-
-                </div> 
-
-            </div> 
-
-            """, unsafe_allow_html=True) 
+    st.plotly_chart(fig4, use_container_width=True, config={'displayModeBar': False}) 
 
  
 
 # ========================= 
 
-# ORDERS vs GAP ANALYSIS 
+# FINANCIAL IMPACT 
 
 # ========================= 
 
-st.markdown("<h2 class='section-header'>🎯 Orders & Gap Correlation</h2>", unsafe_allow_html=True) 
+st.markdown("<h2 class='section-header'>💰 Financial Impact Analysis</h2>", unsafe_allow_html=True) 
 
  
 
-fig2 = make_subplots( 
+# Filter for rows with financial data 
 
-    rows=1, cols=2, 
-
-    subplot_titles=('Orders vs Predicted Gap', 'Year-over-Year Risk Progression'), 
-
-    specs=[[{"secondary_y": False}, {"type": "bar"}]] 
-
-) 
+df_financial = df_filtered[(df_filtered['NetLoss'] != 0) | (df_filtered['ForwardLosses'] != 0) | (df_filtered['ExcessCapacityCost'] != 0)] 
 
  
 
-# Scatter plot 
+if not df_financial.empty: 
 
-fig2.add_trace( 
+    fig5 = go.Figure() 
 
-    go.Scatter( 
+     
 
-        x=df_filtered['Orders'], 
+    fig5.add_trace(go.Bar( 
 
-        y=df_filtered['Predicted_Gap'], 
+        x=df_financial['Year'], 
 
-        mode='markers', 
+        y=df_financial['NetLoss'], 
 
-        marker=dict( 
+        name='Net Loss', 
 
-            size=df_filtered['Risk_Score']*10, 
+        marker_color='#dc2626' 
 
-            color=df_filtered['Risk_Score'], 
+    )) 
 
-            colorscale=[[0, '#10b981'], [0.5, '#f59e0b'], [1, '#dc2626']], 
+     
 
-            showscale=True, 
+    fig5.add_trace(go.Bar( 
 
-            colorbar=dict(title="Risk", x=0.45) 
+        x=df_financial['Year'], 
+
+        y=df_financial['ForwardLosses'], 
+
+        name='Forward Losses', 
+
+        marker_color='#f59e0b' 
+
+    )) 
+
+     
+
+    fig5.add_trace(go.Bar( 
+
+        x=df_financial['Year'], 
+
+        y=df_financial['ExcessCapacityCost'], 
+
+        name='Excess Capacity Cost', 
+
+        marker_color='#3b82f6' 
+
+    )) 
+
+     
+
+    fig5.update_layout( 
+
+        title={ 
+
+            'text': 'Financial Losses & Costs Breakdown', 
+
+            'x': 0.5, 
+
+            'xanchor': 'center', 
+
+            'font': {'size': 18, 'color': '#003087', 'family': 'Inter'} 
+
+        }, 
+
+        xaxis_title='Year', 
+
+        yaxis_title='Amount ($M)', 
+
+        template='plotly_white', 
+
+        height=400, 
+
+        barmode='group', 
+
+        hovermode='x unified', 
+
+        legend=dict( 
+
+            orientation="h", 
+
+            yanchor="bottom", 
+
+            y=1.02, 
+
+            xanchor="right", 
+
+            x=1 
 
         ), 
 
-        text=df_filtered['Year'], 
+        plot_bgcolor='rgba(0,0,0,0)', 
 
-        hovertemplate='<b>Year %{text}</b><br>Orders: %{x}<br>Gap: %{y}<extra></extra>', 
+        paper_bgcolor='rgba(0,0,0,0)' 
 
-        name='Year Data' 
+    ) 
 
-    ), 
+     
 
-    row=1, col=1 
+    fig5.update_xaxes(showgrid=True, gridwidth=1, gridcolor='#e2e8f0') 
 
-) 
+    fig5.update_yaxes(showgrid=True, gridwidth=1, gridcolor='#e2e8f0') 
 
- 
+     
 
-# Risk bar chart 
+    st.plotly_chart(fig5, use_container_width=True, config={'displayModeBar': False}) 
 
-colors_map = {'Low': '#10b981', 'Medium': '#f59e0b', 'High': '#dc2626'} 
+else: 
 
-fig2.add_trace( 
-
-    go.Bar( 
-
-        x=df_filtered['Year'], 
-
-        y=df_filtered['Risk_Score'], 
-
-        marker_color=[colors_map[level] for level in df_filtered['Risk_Level']], 
-
-        text=df_filtered['Risk_Level'], 
-
-        textposition='outside', 
-
-        name='Risk Level', 
-
-        hovertemplate='<b>%{x}</b><br>Risk: %{text}<extra></extra>' 
-
-    ), 
-
-    row=1, col=2 
-
-) 
-
- 
-
-fig2.update_xaxes(title_text="Orders", row=1, col=1, showgrid=True, gridcolor='#e2e8f0') 
-
-fig2.update_yaxes(title_text="Predicted Gap", row=1, col=1, showgrid=True, gridcolor='#e2e8f0') 
-
-fig2.update_xaxes(title_text="Year", row=1, col=2, showgrid=False) 
-
-fig2.update_yaxes(title_text="Risk Score", row=1, col=2, showgrid=True, gridcolor='#e2e8f0') 
-
- 
-
-fig2.update_layout( 
-
-    height=400, 
-
-    showlegend=False, 
-
-    template='plotly_white', 
-
-    paper_bgcolor='rgba(0,0,0,0)', 
-
-    plot_bgcolor='rgba(0,0,0,0)', 
-
-    font={'family': 'Inter'} 
-
-) 
-
- 
-
-st.plotly_chart(fig2, use_container_width=True, config={'displayModeBar': False}) 
+    st.info("No financial impact data available for selected period") 
 
  
 
@@ -1064,7 +1174,7 @@ colors = {
 
  
 
-fig3 = px.timeline( 
+fig6 = px.timeline( 
 
     phases, 
 
@@ -1084,9 +1194,9 @@ fig3 = px.timeline(
 
  
 
-fig3.update_yaxes(autorange="reversed") 
+fig6.update_yaxes(autorange="reversed") 
 
-fig3.update_layout( 
+fig6.update_layout( 
 
     height=400, 
 
@@ -1116,7 +1226,7 @@ fig3.update_layout(
 
  
 
-st.plotly_chart(fig3, use_container_width=True, config={'displayModeBar': False}) 
+st.plotly_chart(fig6, use_container_width=True, config={'displayModeBar': False}) 
 
  
 
@@ -1166,11 +1276,13 @@ with col1:
 
         <ul style='margin-bottom: 0;'> 
 
-            <li>Implement real-time telemetry for high-risk suppliers</li> 
+            <li>Address 2026-2028 high-risk period with enhanced monitoring</li> 
 
-            <li>Establish automated alert system for KPI deviations</li> 
+            <li>Implement real-time telemetry for supplier visibility</li> 
 
-            <li>Increase oversight frequency during 2026-2027 period</li> 
+            <li>Establish automated KPI alert systems</li> 
+
+            <li>Increase production capacity planning for peak demand years</li> 
 
         </ul> 
 
@@ -1188,11 +1300,13 @@ with col1:
 
         <ul style='margin-bottom: 0;'> 
 
-            <li>Deploy dashboard for leadership visibility</li> 
+            <li>Deploy predictive analytics dashboard</li> 
 
-            <li>Integrate supplier portals with central monitoring</li> 
+            <li>Integrate supplier portals with central system</li> 
 
-            <li>Automate weekly risk reports</li> 
+            <li>Automate weekly risk & backlog reports</li> 
+
+            <li>Implement early warning system for production gaps</li> 
 
         </ul> 
 
@@ -1212,13 +1326,15 @@ with col2:
 
         <ul style='margin-bottom: 0;'> 
 
-            <li>Build predictive capacity planning models</li> 
+            <li>Build AI-powered capacity planning models</li> 
 
-            <li>Expand digital oversight to tier-2 suppliers</li> 
+            <li>Expand oversight to tier-2/3 suppliers</li> 
 
-            <li>Develop supplier performance scorecards</li> 
+            <li>Develop comprehensive supplier scorecards</li> 
 
-            <li>Invest in AI-powered anomaly detection</li> 
+            <li>Invest in predictive maintenance systems</li> 
+
+            <li>Create digital twin for supply chain simulation</li> 
 
         </ul> 
 
@@ -1234,15 +1350,43 @@ with col2:
 
 # ========================= 
 
-with st.expander("📊 View Detailed Data Table"): 
+st.markdown("<h2 class='section-header'>📊 Detailed Data View</h2>", unsafe_allow_html=True) 
+
+ 
+
+with st.expander("View Complete Dataset"): 
+
+    # Create a styled dataframe 
+
+    display_df = df_filtered.copy() 
+
+     
 
     st.dataframe( 
 
-        df_filtered.style.background_gradient(subset=['Risk_Score'], cmap='RdYlGn_r'), 
+        display_df, 
 
         use_container_width=True, 
 
         height=400 
+
+    ) 
+
+     
+
+    # Download button 
+
+    csv = df_filtered.to_csv(index=False).encode('utf-8') 
+
+    st.download_button( 
+
+        label="📥 Download Filtered Data", 
+
+        data=csv, 
+
+        file_name=f"boeing_oversight_data_{year_range[0]}-{year_range[1]}.csv", 
+
+        mime="text/csv", 
 
     ) 
 
