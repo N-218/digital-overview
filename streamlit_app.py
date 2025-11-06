@@ -18,20 +18,16 @@ st.set_page_config(
 # =========================
 st.markdown("""
 <style>
-    /* ---------- Base Layout ---------- */
     .stApp {
         background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
         font-family: 'Inter', 'Segoe UI', sans-serif;
         color: #1e293b;
     }
-
     .block-container {
         padding-top: 1rem !important;
         padding-bottom: 0rem !important;
         max-width: 95% !important;
     }
-
-    /* ---------- Dashboard Header ---------- */
     .dashboard-header {
         background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
         border-radius: 20px;
@@ -53,8 +49,6 @@ st.markdown("""
         font-size: 16px;
         color: rgba(255,255,255,0.9);
     }
-
-    /* ---------- Cards (Plates) ---------- */
     .content-card {
         background: #ffffff;
         padding: 25px;
@@ -67,8 +61,6 @@ st.markdown("""
         box-shadow: 0 10px 30px rgba(0,64,128,0.12);
         transform: translateY(-2px);
     }
-
-    /* ---------- Typography ---------- */
     h2, h3, h4 {
         color: #0f3d91 !important;
         font-weight: 700;
@@ -79,8 +71,6 @@ st.markdown("""
         font-size: 15px;
         line-height: 1.5;
     }
-
-    /* ---------- Metrics ---------- */
     [data-testid="stMetricValue"] {
         color: #1e3a8a;
         font-size: 30px;
@@ -90,8 +80,6 @@ st.markdown("""
         color: #64748b;
         font-weight: 600;
     }
-
-    /* ---------- Sidebar ---------- */
     [data-testid="stSidebar"] {
         background: linear-gradient(180deg, #ffffff 0%, #f1f5ff 100%);
         border-right: 1px solid #e2e8f0;
@@ -102,8 +90,6 @@ st.markdown("""
         color: #0f3d91 !important;
         font-weight: 500;
     }
-
-    /* ---------- Buttons ---------- */
     .stButton > button {
         background: linear-gradient(90deg, #1d4ed8 0%, #2563eb 100%);
         color: white;
@@ -118,16 +104,12 @@ st.markdown("""
         transform: translateY(-1px);
         box-shadow: 0 4px 10px rgba(29,78,216,0.25);
     }
-
-    /* ---------- Expanders ---------- */
     .streamlit-expanderHeader {
         background-color: #f1f5f9;
         color: #0f3d91 !important;
         border-radius: 8px;
         font-weight: 600;
     }
-
-    /* ---------- Footer ---------- */
     .footer {
         background: #f1f5f9;
         padding: 16px;
@@ -146,7 +128,7 @@ st.markdown("""
 st.markdown("""
 <div class='dashboard-header'>
     <h1>💼 Digital Oversight Dashboard</h1>
-    <p>Production Forecast • Risk Monitoring • Strategic Insights</p>
+    <p>Production Forecast • Risk Monitoring • Strategic Roadmap</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -196,95 +178,72 @@ st.markdown("## 📈 Forecast & Risk Overview")
 
 colA, colB = st.columns(2)
 
-# Colors
 primary_blue = "#2563eb"
 secondary_blue = "#3b82f6"
 teal = "#06b6d4"
-light_gray = "#e2e8f0"
 
 with colA:
     st.markdown("### Production Gap Forecast")
     fig1 = go.Figure()
-    fig1.add_trace(go.Scatter(
-        x=df["Year"], y=df["ProductionGap"], mode='lines+markers',
-        name="Historical Gap", line=dict(color=primary_blue, width=3)
-    ))
-    fig1.add_trace(go.Scatter(
-        x=df["Year"], y=df["Predicted_Gap"], mode='lines+markers',
-        name="Predicted Gap", line=dict(color=teal, width=3, dash='dot')
-    ))
-    fig1.update_layout(
-        height=400, template="plotly_white", hovermode='x unified',
-        legend=dict(orientation="h", y=1.1, x=0.5, xanchor="center"),
-        margin=dict(l=0, r=0, t=20, b=0),
-        plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)'
-    )
+    fig1.add_trace(go.Scatter(x=df["Year"], y=df["ProductionGap"], mode='lines+markers',
+                              name="Historical Gap", line=dict(color=primary_blue, width=3)))
+    fig1.add_trace(go.Scatter(x=df["Year"], y=df["Predicted_Gap"], mode='lines+markers',
+                              name="Predicted Gap", line=dict(color=teal, width=3, dash='dot')))
+    fig1.update_layout(height=400, template="plotly_white", hovermode='x unified',
+                       legend=dict(orientation="h", y=1.1, x=0.5, xanchor="center"),
+                       margin=dict(l=0, r=0, t=20, b=0),
+                       plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
     st.plotly_chart(fig1, use_container_width=True)
 
 with colB:
     st.markdown("### Risk Levels by Year")
-    fig2 = px.bar(
-        df, x="Year", y="Risk_Score", color="Risk_Level",
-        color_discrete_map={"Low": "#3b82f6", "Medium": "#facc15", "High": "#ef4444"},
-        text="Risk_Level"
-    )
+    fig2 = px.bar(df, x="Year", y="Risk_Score", color="Risk_Level",
+                  color_discrete_map={"Low": "#3b82f6", "Medium": "#facc15", "High": "#ef4444"},
+                  text="Risk_Level")
     fig2.update_traces(textposition='outside')
-    fig2.update_layout(
-        height=400, template="plotly_white",
-        legend=dict(orientation="h", y=1.1, x=0.5, xanchor="center"),
-        margin=dict(l=0, r=0, t=20, b=0),
-        plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)'
-    )
+    fig2.update_layout(height=400, template="plotly_white",
+                       legend=dict(orientation="h", y=1.1, x=0.5, xanchor="center"),
+                       margin=dict(l=0, r=0, t=20, b=0),
+                       plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
     st.plotly_chart(fig2, use_container_width=True)
 
 st.markdown("</div>", unsafe_allow_html=True)
 
 # =========================
-# PERFORMANCE CHARTS
+# ROADMAP SECTION
 # =========================
 st.markdown("<div class='content-card'>", unsafe_allow_html=True)
-st.markdown("## ⚙️ Production Analysis")
+st.markdown("## 🛣️ Strategic Roadmap")
 
-colC, colD = st.columns(2)
+roadmap_data = [
+    {"Phase": "Q1 2025", "Goal": "Implement Predictive Analytics", "Status": "✅ Completed"},
+    {"Phase": "Q2 2025", "Goal": "Enhance Risk Forecasting Models", "Status": "🟡 In Progress"},
+    {"Phase": "Q3 2025", "Goal": "Integrate Supplier Data", "Status": "🔵 Planned"},
+    {"Phase": "Q4 2025", "Goal": "Launch Global Oversight 2.0", "Status": "⚪ Upcoming"}
+]
+roadmap_df = pd.DataFrame(roadmap_data)
 
-with colC:
-    st.markdown("### Output vs Demand")
-    fig3 = go.Figure()
-    fig3.add_trace(go.Bar(
-        x=df["Year"], y=df["PlannedOutput"], name="Planned Output",
-        marker_color=secondary_blue
-    ))
-    fig3.add_trace(go.Bar(
-        x=df["Year"], y=df["ActualOutput"], name="Actual Output",
-        marker_color="#0ea5e9"
-    ))
-    fig3.add_trace(go.Scatter(
-        x=df["Year"], y=df["Orders"], name="Orders",
-        mode="lines+markers", line=dict(color="#14b8a6", width=3)
-    ))
-    fig3.update_layout(
-        barmode='group', height=400, template="plotly_white",
-        legend=dict(orientation="h", y=1.1, x=0.5, xanchor="center"),
-        margin=dict(l=0, r=0, t=20, b=0),
-        plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)'
-    )
-    st.plotly_chart(fig3, use_container_width=True)
-
-with colD:
-    st.markdown("### Backlog Trends")
-    fig4 = px.area(
-        df, x="Year", y="Backlog", color="Risk_Level",
-        color_discrete_map={"Low": "#3b82f6", "Medium": "#f59e0b", "High": "#ef4444"},
-        line_shape='spline'
-    )
-    fig4.update_layout(
-        height=400, template="plotly_white",
-        legend=dict(orientation="h", y=1.1, x=0.5, xanchor="center"),
-        margin=dict(l=0, r=0, t=20, b=0),
-        plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)'
-    )
-    st.plotly_chart(fig4, use_container_width=True)
-
+fig5 = px.timeline(
+    roadmap_df,
+    x_start=["2025-01-01", "2025-04-01", "2025-07-01", "2025-10-01"],
+    x_end=["2025-03-31", "2025-06-30", "2025-09-30", "2025-12-31"],
+    y="Phase",
+    color="Status",
+    text="Goal",
+    color_discrete_map={"✅ Completed": "#22c55e", "🟡 In Progress": "#eab308",
+                        "🔵 Planned": "#3b82f6", "⚪ Upcoming": "#94a3b8"}
+)
+fig5.update_layout(
+    height=400,
+    template="plotly_white",
+    showlegend=True,
+    xaxis_title="Timeline",
+    yaxis_title="",
+    margin=dict(l=0, r=0, t=20, b=0),
+    plot_bgcolor='rgba(0,0,0,0)',
+    paper_bgcolor='rgba(0,0,0,0)'
+)
+st.plotly_chart(fig5, use_container_width=True)
 st.markdown("</div>", unsafe_allow_html=True)
 
 # =========================
