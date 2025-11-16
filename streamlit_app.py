@@ -15,71 +15,393 @@ st.set_page_config(
 )
 
 # =========================
-# ENHANCED CUSTOM CSS - BOEING PROFESSIONAL THEME
+# PROFESSIONAL BOEING ENTERPRISE THEME
 # =========================
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&family=Roboto+Condensed:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-.stApp { background: #E8EDF2; font-family: 'Roboto', sans-serif; }
-.block-container { padding-top: 2rem; padding-bottom: 2rem; }
-
-.dashboard-header { 
-    background: linear-gradient(135deg, #001F5B 0%, #0039A6 50%, #005EB8 100%);
-    padding: 2.5rem 3rem; border-radius: 0; margin: -2rem -3rem 2rem -3rem;
-    box-shadow: 0 6px 20px rgba(0, 31, 91, 0.3);
+/* Global Styles */
+.stApp { 
+    background: #F8F9FA; 
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+.block-container { 
+    padding-top: 1rem; 
+    padding-bottom: 2rem; 
+    max-width: 1600px;
 }
 
-.header-content { display: flex; justify-content: space-between; align-items: center; max-width: 1400px; margin: 0 auto; }
-.header-left h1 { color: white; font-family: 'Roboto Condensed', sans-serif; font-size: 2.8rem; font-weight: 700; margin: 0; letter-spacing: -0.5px; }
-.header-left p { color: #C5D9F1; font-size: 1.15rem; margin-top: 0.5rem; font-weight: 400; }
-.boeing-logo { font-family: 'Roboto Condensed', sans-serif; color: white; font-size: 3rem; font-weight: 700; letter-spacing: 8px; }
+/* Professional Header */
+.dashboard-header { 
+    background: linear-gradient(180deg, #001D3D 0%, #003566 100%);
+    padding: 0;
+    margin: -1rem -3rem 2rem -3rem;
+    border-bottom: 4px solid #0047AB;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
 
-.section-header { color: #001F5B; font-family: 'Roboto Condensed', sans-serif; font-size: 1.75rem; font-weight: 700; 
-                  margin: 3rem 0 1.5rem 0; padding-bottom: 0.75rem; border-bottom: 3px solid #0039A6; letter-spacing: -0.5px; }
+.header-top-bar {
+    background: #000B1D;
+    padding: 0.5rem 3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    color: #A0AEC0;
+}
 
-.metric-card { background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,31,91,0.1);
-               border-left: 4px solid #0039A6; margin-bottom: 1rem; transition: all 0.3s ease; cursor: pointer; }
-.metric-card:hover { box-shadow: 0 6px 20px rgba(0, 57, 166, 0.25); transform: translateY(-2px); border-left-color: #005EB8; }
-.metric-label { font-size: 0.875rem; color: #5B6B7C; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem; }
-.metric-value { font-size: 2.25rem; color: #001F5B; font-weight: 700; line-height: 1; margin-bottom: 0.5rem; }
-.metric-delta { font-size: 0.875rem; color: #5B6B7C; font-weight: 500; }
+.header-main {
+    padding: 1.75rem 3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
 
-.alert-box { padding: 1.5rem; border-radius: 8px; margin: 1.5rem 0; box-shadow: 0 2px 12px rgba(0,31,91,0.08); }
-.alert-box.critical { background: #FFF5F5; border-left: 5px solid #C81E1E; }
-.alert-box.success { background: #F0F9F4; border-left: 5px solid #0B8043; }
-.alert-box.info { background: #EBF4FF; border-left: 5px solid #0039A6; }
-.alert-box h4 { font-size: 1.1rem; font-weight: 600; margin-top: 0; margin-bottom: 0.75rem; color: #001F5B; }
-.alert-box ul { margin: 0; padding-left: 1.5rem; }
-.alert-box li { margin-bottom: 0.5rem; line-height: 1.6; font-size: 0.95rem; color: #1F2937; }
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
 
-.risk-item { margin-bottom: 1.25rem; padding: 1rem; background: white; border-radius: 6px; box-shadow: 0 1px 4px rgba(0,31,91,0.08); }
-.risk-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
-.risk-label { font-weight: 600; font-size: 1rem; color: #001F5B; }
-.risk-count { font-weight: 700; font-size: 1.1rem; }
-.risk-bar-bg { background: #D4DEE7; border-radius: 10px; height: 12px; overflow: hidden; }
-.risk-bar-fill { height: 100%; border-radius: 10px; transition: width 0.3s ease; }
+.boeing-logo-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding-right: 2rem;
+    border-right: 1px solid rgba(255,255,255,0.2);
+}
 
-.phase-card { text-align: center; padding: 1.5rem 1rem; background: white; border-radius: 8px;
-              box-shadow: 0 2px 12px rgba(0,31,91,0.1); border-top: 3px solid #0039A6; transition: all 0.3s ease; }
-.phase-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0, 57, 166, 0.25); }
-.phase-progress { font-size: 2.5rem; font-weight: 700; color: #0039A6; line-height: 1; }
-.phase-label { font-size: 0.875rem; color: #5B6B7C; margin-top: 0.5rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+.boeing-logo {
+    font-family: 'Inter', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    color: white;
+    letter-spacing: 8px;
+    line-height: 1;
+}
 
-.dashboard-footer { text-align: center; padding: 2.5rem 0 1.5rem 0; border-top: 2px solid #D4DEE7; margin-top: 3rem; }
-.footer-title { color: #001F5B; font-size: 0.95rem; font-weight: 600; margin: 0; }
-.footer-meta { color: #5B6B7C; font-size: 0.8rem; margin-top: 0.5rem; }
+.boeing-symbol {
+    width: 45px;
+    height: 45px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    color: #001D3D;
+    font-size: 1.5rem;
+}
 
-.chart-container { background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,31,91,0.1); margin-bottom: 1.5rem; }
+.header-title-section h1 { 
+    color: white; 
+    font-size: 1.75rem; 
+    font-weight: 700; 
+    margin: 0; 
+    letter-spacing: -0.5px;
+}
 
-.stButton>button { background: linear-gradient(135deg, #001F5B 0%, #0039A6 100%); color: white; border: none; border-radius: 6px; padding: 0.5rem 1.5rem; 
-                   font-weight: 600; transition: all 0.3s ease; }
-.stButton>button:hover { background: linear-gradient(135deg, #0039A6 0%, #005EB8 100%); box-shadow: 0 6px 16px rgba(0, 57, 166, 0.4); transform: translateY(-1px); }
+.header-title-section p { 
+    color: #94A3B8; 
+    font-size: 0.875rem; 
+    margin: 0.25rem 0 0 0; 
+    font-weight: 400;
+}
 
-.stTabs [data-baseweb="tab-list"] { gap: 8px; background-color: transparent; }
-.stTabs [data-baseweb="tab"] { background-color: white; border-radius: 8px 8px 0 0; padding: 1rem 2rem; font-weight: 600; 
-                                 box-shadow: 0 2px 8px rgba(0,31,91,0.08); }
-.stTabs [aria-selected="true"] { background: linear-gradient(135deg, #001F5B 0%, #0039A6 100%); color: white; }
+.header-right {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+}
+
+.header-stat {
+    text-align: right;
+}
+
+.header-stat-label {
+    font-size: 0.75rem;
+    color: #94A3B8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+}
+
+.header-stat-value {
+    font-size: 1.5rem;
+    color: white;
+    font-weight: 700;
+}
+
+/* Section Headers */
+.section-header { 
+    color: #1E293B; 
+    font-size: 1.25rem; 
+    font-weight: 700; 
+    margin: 2.5rem 0 1.5rem 0; 
+    padding-bottom: 0.75rem; 
+    border-bottom: 2px solid #E2E8F0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.section-header::before {
+    content: '';
+    width: 4px;
+    height: 24px;
+    background: #0047AB;
+    border-radius: 2px;
+}
+
+/* Metric Cards - Clean & Professional */
+.metric-card { 
+    background: white; 
+    padding: 1.5rem; 
+    border-radius: 12px; 
+    border: 1px solid #E2E8F0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    margin-bottom: 1rem; 
+    transition: all 0.2s ease;
+}
+
+.metric-card:hover { 
+    box-shadow: 0 4px 12px rgba(0, 71, 171, 0.1);
+    border-color: #0047AB;
+    transform: translateY(-2px);
+}
+
+.metric-label { 
+    font-size: 0.75rem; 
+    color: #64748B; 
+    font-weight: 600; 
+    text-transform: uppercase; 
+    letter-spacing: 0.5px; 
+    margin-bottom: 0.5rem;
+}
+
+.metric-value { 
+    font-size: 2rem; 
+    color: #0F172A; 
+    font-weight: 700; 
+    line-height: 1; 
+    margin-bottom: 0.5rem;
+}
+
+.metric-delta { 
+    font-size: 0.875rem; 
+    color: #64748B; 
+    font-weight: 500;
+}
+
+/* Alert Boxes - Professional Style */
+.alert-box { 
+    padding: 1.25rem 1.5rem; 
+    border-radius: 12px; 
+    margin: 1.5rem 0; 
+    border: 1px solid;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.alert-box.critical { 
+    background: #FEF2F2; 
+    border-color: #FCA5A5;
+}
+
+.alert-box.success { 
+    background: #F0FDF4; 
+    border-color: #86EFAC;
+}
+
+.alert-box.info { 
+    background: #EFF6FF; 
+    border-color: #93C5FD;
+}
+
+.alert-box h4 { 
+    font-size: 0.95rem; 
+    font-weight: 700; 
+    margin-top: 0; 
+    margin-bottom: 0.75rem; 
+    color: #0F172A;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.alert-box ul { 
+    margin: 0; 
+    padding-left: 1.5rem;
+}
+
+.alert-box li { 
+    margin-bottom: 0.5rem; 
+    line-height: 1.6; 
+    font-size: 0.875rem; 
+    color: #334155;
+}
+
+/* Risk Items */
+.risk-item { 
+    margin-bottom: 1rem; 
+    padding: 1rem 1.25rem; 
+    background: white; 
+    border-radius: 10px; 
+    border: 1px solid #E2E8F0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.risk-header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-bottom: 0.75rem;
+}
+
+.risk-label { 
+    font-weight: 600; 
+    font-size: 0.875rem; 
+    color: #1E293B;
+}
+
+.risk-count { 
+    font-weight: 700; 
+    font-size: 1rem;
+}
+
+.risk-bar-bg { 
+    background: #F1F5F9; 
+    border-radius: 10px; 
+    height: 10px; 
+    overflow: hidden;
+}
+
+.risk-bar-fill { 
+    height: 100%; 
+    border-radius: 10px; 
+    transition: width 0.3s ease;
+}
+
+/* Phase Cards */
+.phase-card { 
+    text-align: center; 
+    padding: 1.5rem 1rem; 
+    background: white; 
+    border-radius: 12px;
+    border: 1px solid #E2E8F0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+}
+
+.phase-card:hover { 
+    transform: translateY(-3px); 
+    box-shadow: 0 4px 12px rgba(0, 71, 171, 0.15);
+    border-color: #0047AB;
+}
+
+.phase-progress { 
+    font-size: 2rem; 
+    font-weight: 800; 
+    color: #0047AB; 
+    line-height: 1;
+}
+
+.phase-label { 
+    font-size: 0.75rem; 
+    color: #64748B; 
+    margin-top: 0.5rem; 
+    font-weight: 600; 
+    text-transform: uppercase; 
+    letter-spacing: 0.5px;
+}
+
+/* Chart Container */
+.chart-container { 
+    background: white; 
+    padding: 1.5rem; 
+    border-radius: 12px; 
+    border: 1px solid #E2E8F0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    margin-bottom: 1.5rem;
+}
+
+/* Footer */
+.dashboard-footer { 
+    text-align: center; 
+    padding: 2rem 0 1rem 0; 
+    border-top: 1px solid #E2E8F0; 
+    margin-top: 3rem;
+}
+
+.footer-title { 
+    color: #475569; 
+    font-size: 0.875rem; 
+    font-weight: 600; 
+    margin: 0;
+}
+
+.footer-meta { 
+    color: #94A3B8; 
+    font-size: 0.75rem; 
+    margin-top: 0.5rem;
+}
+
+/* Streamlit Component Overrides */
+.stButton>button { 
+    background: linear-gradient(135deg, #001D3D 0%, #0047AB 100%);
+    color: white; 
+    border: none; 
+    border-radius: 8px; 
+    padding: 0.625rem 1.5rem; 
+    font-weight: 600; 
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.stButton>button:hover { 
+    background: linear-gradient(135deg, #0047AB 0%, #0066CC 100%);
+    box-shadow: 0 4px 12px rgba(0, 71, 171, 0.3);
+    transform: translateY(-1px);
+}
+
+/* Tabs */
+.stTabs [data-baseweb="tab-list"] { 
+    gap: 0.5rem; 
+    background-color: transparent;
+    border-bottom: 2px solid #E2E8F0;
+}
+
+.stTabs [data-baseweb="tab"] { 
+    background-color: transparent;
+    border-radius: 0;
+    padding: 0.875rem 1.5rem; 
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #64748B;
+    border-bottom: 3px solid transparent;
+}
+
+.stTabs [aria-selected="true"] { 
+    background: transparent;
+    color: #0047AB;
+    border-bottom-color: #0047AB;
+}
+
+/* Sidebar Styling */
+[data-testid="stSidebar"] {
+    background: white;
+    border-right: 1px solid #E2E8F0;
+}
+
+[data-testid="stSidebar"] .stMarkdown {
+    font-size: 0.875rem;
+}
+
+/* Remove default Streamlit padding */
+.css-1d391kg, .css-12oz5g7 {
+    padding-top: 1rem;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -108,9 +430,12 @@ df_embedded = pd.DataFrame(data)
 # =========================
 with st.sidebar:
     st.markdown("""
-    <div style='text-align: center; padding: 1.5rem 0 2.5rem 0; border-bottom: 2px solid #0039A6;'>
-        <h2 style='color: #0039A6; margin: 0; font-size: 2.2rem; letter-spacing: 6px; font-family: "Roboto Condensed", sans-serif; font-weight: 700;'>BOEING</h2>
-        <p style='color: #5B6B7C; font-size: 0.8rem; margin-top: 0.5rem; letter-spacing: 1px; font-weight: 500;'>DIGITAL OVERSIGHT SYSTEM</p>
+    <div style='text-align: center; padding: 1.5rem 0 2rem 0; border-bottom: 2px solid #E2E8F0;'>
+        <div style='display: flex; align-items: center; justify-content: center; gap: 1rem; margin-bottom: 0.5rem;'>
+            <div style='width: 40px; height: 40px; background: #0047AB; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; color: white; font-size: 1.25rem;'>B</div>
+            <h2 style='color: #0047AB; margin: 0; font-size: 2rem; letter-spacing: 6px; font-weight: 800;'>BOEING</h2>
+        </div>
+        <p style='color: #64748B; font-size: 0.75rem; margin: 0; letter-spacing: 1px; font-weight: 600;'>DIGITAL OVERSIGHT SYSTEM</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -177,12 +502,31 @@ with st.sidebar:
 # =========================
 st.markdown("""
 <div class='dashboard-header'>
-    <div class='header-content'>
+    <div class='header-top-bar'>
+        <div>System Status: <span style='color: #86EFAC; font-weight: 600;'>● OPERATIONAL</span></div>
+        <div>Last Updated: November 16, 2025 | 14:32 UTC</div>
+    </div>
+    <div class='header-main'>
         <div class='header-left'>
-            <h1>Digital Oversight Dashboard</h1>
-            <p>Supply Chain Intelligence & Risk Management System</p>
+            <div class='boeing-logo-container'>
+                <div class='boeing-symbol'>B</div>
+                <div class='boeing-logo'>BOEING</div>
+            </div>
+            <div class='header-title-section'>
+                <h1>Digital Oversight Dashboard</h1>
+                <p>Supply Chain Intelligence & Risk Management System</p>
+            </div>
         </div>
-        <div class='boeing-logo'>BOEING</div>
+        <div class='header-right'>
+            <div class='header-stat'>
+                <div class='header-stat-label'>Active Alerts</div>
+                <div class='header-stat-value' style='color: #FCA5A5;'>3</div>
+            </div>
+            <div class='header-stat'>
+                <div class='header-stat-label'>System Health</div>
+                <div class='header-stat-value' style='color: #86EFAC;'>98%</div>
+            </div>
+        </div>
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -228,7 +572,7 @@ with col4:
 high_risk_years = df_filtered[df_filtered['Risk_Level'] == 'High']['Year'].tolist()
 if high_risk_years:
     st.markdown(f"""<div class='alert-box critical'><h4>⚠️ CRITICAL ALERT: High-Risk Periods Detected</h4>
-    <p style='margin: 0; font-size: 1rem; line-height: 1.6;'><strong>Affected Years:</strong> {', '.join(map(str, high_risk_years))}<br>
+    <p style='margin: 0; font-size: 0.875rem; line-height: 1.6;'><strong>Affected Years:</strong> {', '.join(map(str, high_risk_years))}<br>
     <strong>Action Required:</strong> Immediate supplier oversight and capacity planning review needed.</p></div>""", unsafe_allow_html=True)
 
 # =========================
@@ -249,17 +593,17 @@ with tab1:
         
         if chart_type == "Line Chart":
             fig1.add_trace(go.Scatter(x=df_filtered['Year'], y=df_filtered['ProductionGap'], name='Actual Gap',
-                                     mode='lines+markers', line=dict(color='#5B6B7C', width=3), marker=dict(size=8)))
+                                     mode='lines+markers', line=dict(color='#64748B', width=3), marker=dict(size=8)))
             fig1.add_trace(go.Scatter(x=df_filtered['Year'], y=df_filtered['Predicted_Gap'], name='Predicted Gap',
-                                     mode='lines+markers', line=dict(color='#0039A6', width=4), marker=dict(size=10, symbol='diamond')))
+                                     mode='lines+markers', line=dict(color='#0047AB', width=4), marker=dict(size=10, symbol='diamond')))
         elif chart_type == "Area Chart":
             fig1.add_trace(go.Scatter(x=df_filtered['Year'], y=df_filtered['ProductionGap'], name='Actual Gap',
-                                     fill='tozeroy', fillcolor='rgba(91, 107, 124, 0.3)', line=dict(color='#5B6B7C')))
+                                     fill='tozeroy', fillcolor='rgba(100, 116, 139, 0.3)', line=dict(color='#64748B')))
             fig1.add_trace(go.Scatter(x=df_filtered['Year'], y=df_filtered['Predicted_Gap'], name='Predicted Gap',
-                                     fill='tozeroy', fillcolor='rgba(0, 57, 166, 0.3)', line=dict(color='#0039A6')))
+                                     fill='tozeroy', fillcolor='rgba(0, 71, 171, 0.3)', line=dict(color='#0047AB')))
         else:
-            fig1.add_trace(go.Bar(x=df_filtered['Year'], y=df_filtered['ProductionGap'], name='Actual Gap', marker_color='#5B6B7C'))
-            fig1.add_trace(go.Bar(x=df_filtered['Year'], y=df_filtered['Predicted_Gap'], name='Predicted Gap', marker_color='#0039A6'))
+            fig1.add_trace(go.Bar(x=df_filtered['Year'], y=df_filtered['ProductionGap'], name='Actual Gap', marker_color='#64748B'))
+            fig1.add_trace(go.Bar(x=df_filtered['Year'], y=df_filtered['Predicted_Gap'], name='Predicted Gap', marker_color='#0047AB'))
         
         fig1.update_layout(title='Production Gap: Actual vs Predicted', xaxis_title='Year', yaxis_title='Gap (Units)',
                           template='plotly_white', height=450, hovermode='x unified',
@@ -276,7 +620,7 @@ with tab1:
             if level in risk_counts.index:
                 count = risk_counts[level]
                 perc = (count / len(df_filtered)) * 100
-                color = {'High': '#C81E1E', 'Medium': '#F57C00', 'Low': '#0B8043'}[level]
+                color = {'High': '#DC2626', 'Medium': '#F59E0B', 'Low': '#10B981'}[level]
                 st.markdown(f"""<div class='risk-item'><div class='risk-header'>
                 <span class='risk-label'>{level} Risk</span><span class='risk-count' style='color:{color}'>{count} ({perc:.0f}%)</span></div>
                 <div class='risk-bar-bg'><div class='risk-bar-fill' style='width:{perc}%; background:{color};'></div></div></div>""", unsafe_allow_html=True)
@@ -291,7 +635,7 @@ with tab2:
         scatter_size = st.selectbox("Size by:", ["Risk Score", "Orders", "Predicted Gap"])
     
     color_col = df_filtered['Risk_Score'] if scatter_color == "Risk Level" else df_filtered['Year']
-    colorscale = [[0, '#0B8043'], [0.5, '#F57C00'], [1, '#C81E1E']] if scatter_color == "Risk Level" else [[0, '#001F5B'], [0.5, '#0039A6'], [1, '#005EB8']]
+    colorscale = [[0, '#10B981'], [0.5, '#F59E0B'], [1, '#DC2626']] if scatter_color == "Risk Level" else [[0, '#001D3D'], [0.5, '#0047AB'], [1, '#0066CC']]
     size_col = df_filtered['Risk_Score']*12 if scatter_size == "Risk Score" else df_filtered['Orders']/10 if scatter_size == "Orders" else df_filtered['Predicted_Gap']/10
     
     fig_scatter = go.Figure(data=go.Scatter(x=df_filtered['Orders'], y=df_filtered['Predicted_Gap'], mode='markers',
@@ -310,7 +654,7 @@ with tab3:
         st.markdown("#### Risk Distribution by Count")
         risk_counts = df_filtered['Risk_Level'].value_counts()
         fig_pie = go.Figure(data=[go.Pie(labels=risk_counts.index, values=risk_counts.values,
-                                        marker=dict(colors=['#C81E1E', '#F57C00', '#0B8043']), hole=0.4,
+                                        marker=dict(colors=['#DC2626', '#F59E0B', '#10B981']), hole=0.4,
                                         textinfo='label+percent', textfont=dict(size=14))])
         fig_pie.update_layout(height=400, showlegend=True, template='plotly_white')
         st.plotly_chart(fig_pie, use_container_width=True)
@@ -319,7 +663,7 @@ with tab3:
         st.markdown("#### Gap by Risk Level")
         gap_by_risk = df_filtered.groupby('Risk_Level')['Predicted_Gap'].sum().reset_index()
         fig_bar = go.Figure(data=[go.Bar(x=gap_by_risk['Risk_Level'], y=gap_by_risk['Predicted_Gap'],
-                                        marker_color=['#0B8043', '#F57C00', '#C81E1E'],
+                                        marker_color=['#10B981', '#F59E0B', '#DC2626'],
                                         text=gap_by_risk['Predicted_Gap'], texttemplate='%{text:,.0f}', textposition='outside')])
         fig_bar.update_layout(height=400, xaxis_title='Risk Level', yaxis_title='Total Predicted Gap',
                             template='plotly_white', showlegend=False)
@@ -344,9 +688,9 @@ with tab4:
     
     st.markdown("#### Historical Comparison")
     fig_compare = make_subplots(specs=[[{"secondary_y": True}]])
-    fig_compare.add_trace(go.Bar(x=df_filtered['Year'], y=df_filtered['Orders'], name='Orders', marker_color='#0039A6'), secondary_y=False)
+    fig_compare.add_trace(go.Bar(x=df_filtered['Year'], y=df_filtered['Orders'], name='Orders', marker_color='#0047AB'), secondary_y=False)
     fig_compare.add_trace(go.Scatter(x=df_filtered['Year'], y=df_filtered['Predicted_Gap'], name='Predicted Gap',
-                                    mode='lines+markers', marker=dict(size=10, color='#C81E1E'), line=dict(width=3, color='#C81E1E')), secondary_y=True)
+                                    mode='lines+markers', marker=dict(size=10, color='#DC2626'), line=dict(width=3, color='#DC2626')), secondary_y=True)
     fig_compare.update_yaxes(title_text="Orders", secondary_y=False)
     fig_compare.update_yaxes(title_text="Predicted Gap", secondary_y=True)
     fig_compare.update_layout(height=400, template='plotly_white', hovermode='x unified',
@@ -383,8 +727,8 @@ with col2:
 with col3:
     st.metric("End Date", phase_info['Finish'].strftime('%Y-%m-%d'))
 
-colors = {'Planning': '#001F5B', 'Implementation': '#0039A6', 'Integration': '#005EB8',
-          'Analytics': '#1976D2', 'Deployment': '#42A5F5', 'Review': '#90CAF9'}
+colors = {'Planning': '#001D3D', 'Implementation': '#0047AB', 'Integration': '#0066CC',
+          'Analytics': '#3B82F6', 'Deployment': '#60A5FA', 'Review': '#93C5FD'}
 
 fig3 = px.timeline(phases, x_start="Start", x_end="Finish", y="Phase", color="Category", color_discrete_map=colors)
 fig3.update_yaxes(autorange="reversed")
